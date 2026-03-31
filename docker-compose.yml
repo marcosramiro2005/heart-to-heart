@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: heart_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=heart_to_heart
+      - DB_USERNAME=heart_user
+      - DB_PASSWORD=heart_pass
+
+  db:
+    image: mysql:8.0
+    container_name: heart_db
+    restart: unless-stopped
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: heart_to_heart
+      MYSQL_USER: heart_user
+      MYSQL_PASSWORD: heart_pass
+      MYSQL_ROOT_PASSWORD: root_pass
+    volumes:
+      - db_data:/var/lib/mysql
+
+  chatbot:
+    build:
+      context: ./chatbot
+      dockerfile: Dockerfile
+    container_name: heart_chatbot
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+
+volumes:
+  db_data:
