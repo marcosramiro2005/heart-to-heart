@@ -23,6 +23,11 @@ Route::get('/hearty', function () {
     return Inertia::render('Hearty/Index');
 })->middleware(['auth'])->name('hearty');
 
+// Página principal tras login
+Route::get('/home', function () {
+    return Inertia::render('Home/Index');
+})->middleware(['auth'])->name('home');
+
 // Perfil
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
