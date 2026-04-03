@@ -28,6 +28,26 @@ Route::get('/home', function () {
     return Inertia::render('Home/Index');
 })->middleware(['auth'])->name('home');
 
+Route::get('/respiracion', function () {
+    return Inertia::render('Tecnicas/Respiracion');
+})->middleware(['auth'])->name('respiracion');
+
+Route::get('/sonidos', function () {
+    return Inertia::render('Tecnicas/Sonidos');
+})->middleware(['auth'])->name('sonidos');
+
+Route::get('/diario', function () {
+    return Inertia::render('Tecnicas/Diario');
+})->middleware(['auth'])->name('diario');
+
+Route::get('/infusiones', function () {
+    return Inertia::render('Tecnicas/Infusiones');
+})->middleware(['auth'])->name('infusiones');
+
+Route::get('/ejercicio', function () {
+    return Inertia::render('Tecnicas/Ejercicio');
+})->middleware(['auth'])->name('ejercicio');
+
 // Perfil
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
