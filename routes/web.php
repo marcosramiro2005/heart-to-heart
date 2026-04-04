@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\HeartyController; 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -18,16 +19,20 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// Chatbot Hearty — primera pantalla tras el login
-Route::get('/hearty', function () {
-    return Inertia::render('Hearty/Index');
-})->middleware(['auth'])->name('hearty');
+// --- NUEVAS RUTAS DE HEARTY (Reemplazan a la anterior) ---
+Route::middleware(['auth'])->group(function () {
+    Route::get('/hearty', [HeartyController::class, 'index'])->name('hearty');
+    Route::get('/hearty/inicio', [HeartyController::class, 'inicio']);
+    Route::post('/hearty/chat', [HeartyController::class, 'chat']);
+});
+// --------------------------------------------------------
 
 // Página principal tras login
 Route::get('/home', function () {
     return Inertia::render('Home/Index');
 })->middleware(['auth'])->name('home');
 
+// Técnicas
 Route::get('/respiracion', function () {
     return Inertia::render('Tecnicas/Respiracion');
 })->middleware(['auth'])->name('respiracion');
