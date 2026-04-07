@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\HeartyController; 
 use App\Http\Controllers\ForumController;
+use App\Http\Controllers\NewsController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -63,13 +64,16 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth'])->group(function () {
 
-    // Foro
+    // Foro y noticias
     Route::get('/comunidad', [ForumController::class, 'index'])->name('forum.index');
     Route::get('/comunidad/{forumPost}', [ForumController::class, 'show'])->name('forum.show');
     Route::post('/comunidad', [ForumController::class, 'store'])->name('forum.store');
     Route::post('/comunidad/{forumPost}/comentar', [ForumController::class, 'comment'])->name('forum.comment');
     Route::post('/comunidad/{forumPost}/like', [ForumController::class, 'like'])->name('forum.like');
     Route::delete('/comunidad/{forumPost}', [ForumController::class, 'destroy'])->name('forum.destroy');
+    Route::get('/recursos', [NewsController::class, 'index'])->name('news.index');
+    Route::get('/recursos/guardados', [NewsController::class, 'guardadas'])->name('news.guardadas');
+    Route::post('/recursos/guardar', [NewsController::class, 'toggleGuardar'])->name('news.guardar');
 });
 
 require __DIR__.'/auth.php';

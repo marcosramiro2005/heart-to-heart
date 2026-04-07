@@ -59,4 +59,9 @@ public function forumLikes()
 {
     return $this->hasMany(ForumLike::class);
 }
+
+public function savedNews()
+{
+    return $this->hasMany(SavedNews::class);
+}
 }
