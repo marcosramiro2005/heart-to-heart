@@ -5,9 +5,10 @@ import { ref } from 'vue'
 const menuOpen = ref(false)
 
 const navLinks = [
-    { name: 'Inicio', href: '/home' },
-    { name: 'Recursos', href: '/recursos' },
-    { name: 'Comunidad', href: '/comunidad' },
+    { name: 'Inicio',         href: '/home' },
+    { name: 'Mis emociones',  href: '/mis-emociones' },
+    { name: 'Recursos',       href: '/recursos' },
+    { name: 'Comunidad',      href: '/comunidad' },
     { name: '¿Quiénes somos?', href: '/quienes-somos' },
 ]
 </script>
