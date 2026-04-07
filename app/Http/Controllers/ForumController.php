@@ -93,6 +93,9 @@ class ForumController extends Controller
             'is_anonymous' => 'boolean',
         ]);
 
+        $achievementService = new \App\Services\AchievementService();
+        $achievementService->verificarLogros(auth()->id());
+
         ForumPost::create([
             'user_id' => auth()->id(),
             'title' => $request->title,
@@ -112,6 +115,9 @@ class ForumController extends Controller
             'content' => 'required|string|min:5|max:500',
             'is_anonymous' => 'boolean',
         ]);
+
+        $achievementService = new \App\Services\AchievementService();
+        $achievementService->verificarLogros(auth()->id());
 
         ForumComment::create([
             'user_id' => auth()->id(),

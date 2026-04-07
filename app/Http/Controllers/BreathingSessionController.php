@@ -15,6 +15,9 @@ class BreathingSessionController extends Controller
         'duration_minutes' => $request->duration_minutes,
     ]);
 
+    $achievementService = new \App\Services\AchievementService();
+    $achievementService->verificarLogros(auth()->id());
+
     return response()->json(['message' => 'Sesión guardada']);
     }
 

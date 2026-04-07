@@ -83,6 +83,9 @@ class EmotionalDashboardController extends Controller
             'activity'  => 'nullable|string',
         ]);
 
+        $achievementService = new \App\Services\AchievementService();
+        $achievementService->verificarLogros(auth()->id());
+
         $hoy = Carbon::today();
 
         // Un registro por día — actualizar si ya existe

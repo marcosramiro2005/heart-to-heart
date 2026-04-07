@@ -64,4 +64,16 @@ public function savedNews()
 {
     return $this->hasMany(SavedNews::class);
 }
+
+public function achievements()
+{
+    return $this->belongsToMany(Achievement::class, 'user_achievements')
+        ->withPivot('unlocked_at')
+        ->withTimestamps();
+}
+
+public function totalPoints(): int
+{
+    return $this->achievements()->sum('points');
+}
 }

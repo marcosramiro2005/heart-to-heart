@@ -5,6 +5,7 @@ use App\Http\Controllers\HeartyController;
 use App\Http\Controllers\ForumController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\EmotionalDashboardController;
+use App\Http\Controllers\AchievementController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -77,6 +78,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/recursos/guardar', [NewsController::class, 'toggleGuardar'])->name('news.guardar');
     Route::get('/mis-emociones', [EmotionalDashboardController::class, 'index'])->name('emotional.dashboard');
     Route::post('/mis-emociones/registrar', [EmotionalDashboardController::class, 'registrar'])->name('emotional.registrar');
+    Route::get('/logros', [AchievementController::class, 'index'])->name('achievements.index');
+    Route::post('/logros/verificar', [AchievementController::class, 'verificar'])->name('achievements.verificar');
 });
 
 require __DIR__.'/auth.php';
