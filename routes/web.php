@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\HeartyController; 
+use App\Http\Controllers\ForumController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -58,6 +59,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+Route::middleware(['auth'])->group(function () {
+
+    // Foro
+    Route::get('/comunidad', [ForumController::class, 'index'])->name('forum.index');
+    Route::get('/comunidad/{forumPost}', [ForumController::class, 'show'])->name('forum.show');
+    Route::post('/comunidad', [ForumController::class, 'store'])->name('forum.store');
+    Route::post('/comunidad/{forumPost}/comentar', [ForumController::class, 'comment'])->name('forum.comment');
+    Route::post('/comunidad/{forumPost}/like', [ForumController::class, 'like'])->name('forum.like');
+    Route::delete('/comunidad/{forumPost}', [ForumController::class, 'destroy'])->name('forum.destroy');
 });
 
 require __DIR__.'/auth.php';

@@ -10,7 +10,7 @@ from hearty.respuestas import (
 )
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["http://127.0.0.1:8000", "http://localhost:8000"])
 
 def construir_respuesta(mensaje_usuario, contexto):
     """Genera la respuesta de Hearty basándose en el mensaje del usuario."""

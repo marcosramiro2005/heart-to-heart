@@ -9,9 +9,8 @@ use Inertia\Inertia;
 
 class HeartyController extends Controller
 {
-    private $chatbotUrl = 'http://127.0.0.1:5000';
+    private $chatbotUrl = 'http://localhost:5000';
 
-    // Muestra la página del chat
     public function index()
     {
         $mensajes = ChatMessage::where('user_id', auth()->id())
@@ -23,22 +22,26 @@ class HeartyController extends Controller
         ]);
     }
 
-    // Obtiene el mensaje de bienvenida de Hearty
     public function inicio()
     {
         try {
-            $response = Http::get("{$this->chatbotUrl}/inicio");
-            return response()->json($response->json());
+            $response = Http::timeout(5)->get("{$this->chatbotUrl}/inicio");
+
+            if ($response->successful()) {
+                return response()->json($response->json());
+            }
+
+            throw new \Exception('Flask no responde');
+
         } catch (\Exception $e) {
             return response()->json([
                 'mensaje' => '¡Hola! Soy Hearty 💚 ¿Cómo te sientes hoy?',
-                'opciones' => ['😊 Bien', '😰 Ansioso/a', '😢 Triste', '😴 Cansado/a'],
+                'opciones' => ['😊 Bien', '😌 Tranquilo/a', '😰 Ansioso/a', '😢 Triste', '😠 Enfadado/a', '😴 Cansado/a'],
                 'pregunta_id' => 'bienvenida'
             ]);
         }
     }
 
-    // Envía mensaje al chatbot y guarda en BD
     public function chat(Request $request)
     {
         $request->validate([
@@ -46,7 +49,7 @@ class HeartyController extends Controller
             'pregunta_actual' => 'nullable|string',
         ]);
 
-        // Guardar mensaje del usuario
+        // Guardar mensaje del usuario en BD
         ChatMessage::create([
             'user_id' => auth()->id(),
             'sender' => 'user',
@@ -54,16 +57,21 @@ class HeartyController extends Controller
         ]);
 
         try {
-            // Enviar al chatbot Python
-            $response = Http::post("{$this->chatbotUrl}/chat", [
-                'mensaje' => $request->mensaje,
-                'pregunta_actual' => $request->pregunta_actual ?? 'bienvenida',
-                'contexto' => []
-            ]);
+            $response = Http::timeout(10)
+                ->withHeaders(['Content-Type' => 'application/json'])
+                ->post("{$this->chatbotUrl}/chat", [
+                    'mensaje' => $request->mensaje,
+                    'pregunta_actual' => $request->pregunta_actual ?? 'bienvenida',
+                    'contexto' => []
+                ]);
+
+            if (!$response->successful()) {
+                throw new \Exception('Error en Flask: ' . $response->status());
+            }
 
             $data = $response->json();
 
-            // Guardar respuesta de Hearty
+            // Guardar respuesta de Hearty en BD
             ChatMessage::create([
                 'user_id' => auth()->id(),
                 'sender' => 'hearty',
@@ -74,7 +82,9 @@ class HeartyController extends Controller
             return response()->json($data);
 
         } catch (\Exception $e) {
-            $respuesta = "Lo siento, tengo problemas para conectarme ahora mismo 💙 Pero recuerda: estoy aquí para ti.";
+            \Log::error('Error Hearty: ' . $e->getMessage());
+
+            $respuesta = "Lo siento, tengo problemas técnicos ahora mismo 💙 Pero recuerda: estoy aquí para ti.";
 
             ChatMessage::create([
                 'user_id' => auth()->id(),
@@ -82,7 +92,11 @@ class HeartyController extends Controller
                 'message' => $respuesta,
             ]);
 
-            return response()->json(['respuesta' => $respuesta]);
+            return response()->json([
+                'respuesta' => $respuesta,
+                'tecnicas_sugeridas' => [],
+                'error_detalle' => $e->getMessage()
+            ]);
         }
     }
 }

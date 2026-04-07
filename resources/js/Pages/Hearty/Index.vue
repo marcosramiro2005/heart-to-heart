@@ -54,7 +54,7 @@ const enviarMensaje = async (texto = null) => {
     cargando.value = true
 
     try {
-        const res = await axios.post('/hearty/chat', {
+        const res = await axios.post('http://127.0.0.1:5000/chat', {
             mensaje: mensajeTexto,
             pregunta_actual: preguntaActual.value
         })
@@ -74,7 +74,7 @@ const enviarMensaje = async (texto = null) => {
         }
 
     } catch (e) {
-        agregarMensaje('hearty', 'Lo siento, algo ha fallado. Por favor, inténtalo de nuevo 💙')
+        agregarMensaje('hearty', 'Lo siento, algo ha fallado. Por favor inténtalo de nuevo 💙')
     } finally {
         cargando.value = false
     }
@@ -83,14 +83,14 @@ const enviarMensaje = async (texto = null) => {
 const cargarInicio = async () => {
     cargando.value = true
     try {
-        const res = await axios.get('/hearty/inicio')
+        const res = await axios.get('http://127.0.0.1:5000/inicio')
         const data = res.data
         agregarMensaje('hearty', data.mensaje)
         opcionesActuales.value = data.opciones || []
         preguntaActual.value = data.pregunta_id || 'bienvenida'
     } catch (e) {
         agregarMensaje('hearty', '¡Hola! Soy Hearty 💚 ¿Cómo te sientes hoy?')
-        opcionesActuales.value = ['😊 Bien', '😰 Ansioso/a', '😢 Triste', '😴 Cansado/a']
+        opcionesActuales.value = ['😊 Bien', '😌 Tranquilo/a', '😰 Ansioso/a', '😢 Triste', '😠 Enfadado/a', '😴 Cansado/a']
     } finally {
         cargando.value = false
     }

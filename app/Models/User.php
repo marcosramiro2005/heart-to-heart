@@ -49,4 +49,14 @@ public function breathingSessions()
 {
     return $this->hasMany(BreathingSession::class);
 }
+
+public function forumPosts()
+{
+    return $this->hasMany(ForumPost::class);
+}
+
+public function forumLikes()
+{
+    return $this->hasMany(ForumLike::class);
+}
 }
