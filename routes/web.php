@@ -85,6 +85,10 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/perfil', [UserProfileController::class, 'update'])->name('profile.update');
     Route::patch('/perfil/password', [UserProfileController::class, 'updatePassword'])->name('profile.password');
     Route::delete('/perfil', [UserProfileController::class, 'deleteAccount'])->name('profile.delete');
+    Route::get('/hearty', [HeartyController::class, 'index'])->name('hearty');
+    Route::get('/hearty/inicio', [HeartyController::class, 'inicio']);
+    Route::post('/hearty/chat', [HeartyController::class, 'chat']);
+    Route::delete('/hearty/limpiar', [HeartyController::class, 'limpiarChat'])->name('hearty.limpiar');
 });
 
 require __DIR__.'/auth.php';
