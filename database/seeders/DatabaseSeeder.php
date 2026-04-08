@@ -16,7 +16,9 @@ class DatabaseSeeder extends Seeder
     $this->call([
     ResourceSeeder::class,
     AchievementSeeder::class,
+    ResourceLibrarySeeder::class,
 ]);
 }
+
     
 }

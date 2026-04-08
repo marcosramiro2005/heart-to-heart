@@ -6,11 +6,12 @@ import AchievementToast from '@/Components/AchievementToast.vue'
 const menuOpen = ref(false)
 
 const navLinks = [
-    { name: 'Inicio',         href: '/home' },
-    { name: 'Mis emociones',  href: '/mis-emociones' },
-    { name: 'Recursos',       href: '/recursos' },
-    { name: 'Comunidad',      href: '/comunidad' },
-    { name: 'Mis logros',     href: '/logros' },
+    { name: 'Inicio',          href: '/home' },
+    { name: 'Mis emociones',   href: '/mis-emociones' },
+    { name: 'Biblioteca',      href: '/biblioteca' },
+    { name: 'Recursos',        href: '/recursos' },
+    { name: 'Comunidad',       href: '/comunidad' },
+    { name: 'Mis logros',      href: '/logros' },
     { name: '¿Quiénes somos?', href: '/quienes-somos' },
 ]
 </script>

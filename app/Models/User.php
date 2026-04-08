@@ -96,4 +96,10 @@ protected $casts = [
     'profile_public'    => 'boolean',
     'show_in_forum'     => 'boolean',
 ];
+
+public function savedResources()
+{
+    return $this->belongsToMany(Resource::class, 'resource_saves')
+        ->withTimestamps();
+}
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\NewsController;
 use App\Http\Controllers\EmotionalDashboardController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\AchievementController;
+use App\Http\Controllers\ResourceLibraryController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -89,6 +90,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/hearty/inicio', [HeartyController::class, 'inicio']);
     Route::post('/hearty/chat', [HeartyController::class, 'chat']);
     Route::delete('/hearty/limpiar', [HeartyController::class, 'limpiarChat'])->name('hearty.limpiar');
+    Route::get('/biblioteca',              [ResourceLibraryController::class, 'index'])->name('library.index');
+    Route::get('/biblioteca/guardados',    [ResourceLibraryController::class, 'guardados'])->name('library.saved');
+    Route::get('/biblioteca/{resource}',   [ResourceLibraryController::class, 'show'])->name('library.show');
+    Route::post('/biblioteca/{resource}/guardar', [ResourceLibraryController::class, 'toggleSave'])->name('library.save');
 });
+
+Route::get('/quienes-somos', function () {
+    return Inertia::render('About/Index');
+})->middleware(['auth'])->name('about');
 
 require __DIR__.'/auth.php';
