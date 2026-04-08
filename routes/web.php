@@ -5,6 +5,7 @@ use App\Http\Controllers\HeartyController;
 use App\Http\Controllers\ForumController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\EmotionalDashboardController;
+use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\AchievementController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -80,6 +81,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/mis-emociones/registrar', [EmotionalDashboardController::class, 'registrar'])->name('emotional.registrar');
     Route::get('/logros', [AchievementController::class, 'index'])->name('achievements.index');
     Route::post('/logros/verificar', [AchievementController::class, 'verificar'])->name('achievements.verificar');
+    Route::get('/perfil', [UserProfileController::class, 'index'])->name('profile.show');
+    Route::patch('/perfil', [UserProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/perfil/password', [UserProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::delete('/perfil', [UserProfileController::class, 'deleteAccount'])->name('profile.delete');
 });
 
 require __DIR__.'/auth.php';

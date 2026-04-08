@@ -34,6 +34,10 @@ const navLinks = [
                     </li>
                 </ul>
 
+                <a href="/perfil" class="nav-perfil">
+                    {{ $page.props.auth?.user?.avatar || '👤' }}
+                </a>
+
                 <!-- Menú hamburguesa móvil -->
                 <button class="hamburger" @click="menuOpen = !menuOpen">
                     <span></span><span></span><span></span>
@@ -159,6 +163,22 @@ const navLinks = [
     font-weight: 600;
     color: #2D2D2D;
 }
+
+.nav-perfil {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #E8FAF9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    text-decoration: none;
+    border: 2px solid #4ECDC4;
+    transition: transform 0.2s;
+}
+
+.nav-perfil:hover { transform: scale(1.1); }
 
 /* ── Responsive ── */
 @media (max-width: 768px) {

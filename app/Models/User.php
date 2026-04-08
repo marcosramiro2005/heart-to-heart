@@ -76,4 +76,24 @@ public function totalPoints(): int
 {
     return $this->achievements()->sum('points');
 }
+
+protected $fillable = [
+    'name',
+    'email',
+    'password',
+    'avatar',
+    'bio',
+    'location',
+    'birth_date',
+    'profile_public',
+    'show_in_forum',
+    'theme_color',
+];
+
+protected $casts = [
+    'email_verified_at' => 'datetime',
+    'birth_date'        => 'date',
+    'profile_public'    => 'boolean',
+    'show_in_forum'     => 'boolean',
+];
 }
