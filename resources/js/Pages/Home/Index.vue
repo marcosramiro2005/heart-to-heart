@@ -3,41 +3,16 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import { router } from '@inertiajs/vue3'
 
 const tecnicas = [
-    {
-        id: 'respiracion',
-        nombre: 'Respiración',
-        color: '#d4edda',
-        icon: '🫁',
-        ruta: '/respiracion'
-    },
-    {
-        id: 'sonidos',
-        nombre: 'Sonidos Relajantes',
-        color: '#d0eaf8',
-        icon: '🎵',
-        ruta: '/sonidos'
-    },
-    {
-        id: 'diario',
-        nombre: 'Diario de Gratitud',
-        color: '#fff9c4',
-        icon: '📓',
-        ruta: '/diario'
-    },
-    {
-        id: 'infusiones',
-        nombre: 'Infusiones',
-        color: '#e8d5f5',
-        icon: '🍵',
-        ruta: '/infusiones'
-    },
-    {
-        id: 'ejercicio',
-        nombre: 'Ejercicio',
-        color: '#ffd5d5',
-        icon: '🏃',
-        ruta: '/ejercicio'
-    },
+    { id: 'respiracion',   nombre: 'Respiración',       color: '#d4edda', icon: '🫁', ruta: '/respiracion' },
+    { id: 'meditacion',    nombre: 'Meditación',         color: '#e8d5f5', icon: '🧘', ruta: '/meditacion' },
+    { id: 'sonidos',       nombre: 'Sonidos Relajantes', color: '#d0eaf8', icon: '🎵', ruta: '/sonidos' },
+    { id: 'diario',        nombre: 'Diario de Gratitud', color: '#fff9c4', icon: '📓', ruta: '/diario' },
+    { id: 'tapping',       nombre: 'EFT Tapping',        color: '#ffecd2', icon: '👆', ruta: '/tapping' },
+    { id: 'visualizacion', nombre: 'Visualización',      color: '#ffd5e5', icon: '🌈', ruta: '/visualizacion' },
+    { id: 'yoga',          nombre: 'Yoga suave',         color: '#d4f5e9', icon: '🤸', ruta: '/yoga' },
+    { id: 'journaling',    nombre: 'Journaling',         color: '#e8f4f8', icon: '📝', ruta: '/journaling' },
+    { id: 'infusiones',    nombre: 'Infusiones',         color: '#e8d5f5', icon: '🍵', ruta: '/infusiones' },
+    { id: 'ejercicio',     nombre: 'Ejercicio',          color: '#ffd5d5', icon: '🏃', ruta: '/ejercicio' },
 ]
 
 const irATecnica = (ruta) => {
@@ -130,6 +105,64 @@ const irAHearty = () => {
     font-size: 1.1rem;
     color: #2D2D2D;
     margin: 0 0 1.5rem;
+}
+
+/* ── Animaciones del hero ── */
+.hero-text h1 {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.hero-text p {
+    animation: fadeInUp 0.6s ease 0.15s forwards;
+    opacity: 0;
+}
+
+.btn-hearty {
+    animation: fadeInUp 0.6s ease 0.3s forwards;
+    opacity: 0;
+}
+
+.hero-image img {
+    animation: float 4s ease-in-out infinite;
+}
+
+/* ── Tarjetas técnicas mejoradas ── */
+.tecnica-card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+}
+
+.tecnica-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+    filter: brightness(1.03);
+}
+
+/* ── Botones de emoción mejorados ── */
+.emocion-btn {
+    transition: background 0.2s, color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.emocion-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(78,205,196,0.25);
+}
+
+/* ── Hero subtítulo destacado ── */
+.hero {
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #3BAFA7, #4ECDC4, #3BAFA7);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
 }
 
 .btn-hearty {
@@ -263,13 +296,17 @@ const irAHearty = () => {
     }
 
     .tecnicas-grid {
-        grid-template-columns: repeat(2, 1fr);
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
     }
+
+@media (max-width: 900px) {
+    .tecnicas-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
-@media (max-width: 480px) {
-    .tecnicas-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+@media (max-width: 580px) {
+    .tecnicas-grid { grid-template-columns: repeat(2, 1fr); }
+}
 }
 </style>

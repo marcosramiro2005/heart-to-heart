@@ -100,4 +100,10 @@ Route::get('/quienes-somos', function () {
     return Inertia::render('About/Index');
 })->middleware(['auth'])->name('about');
 
+Route::get('/meditacion',    fn() => Inertia::render('Tecnicas/Meditacion'))->middleware('auth')->name('meditacion');
+Route::get('/yoga',          fn() => Inertia::render('Tecnicas/Yoga'))->middleware('auth')->name('yoga');
+Route::get('/tapping',       fn() => Inertia::render('Tecnicas/Tapping'))->middleware('auth')->name('tapping');
+Route::get('/visualizacion', fn() => Inertia::render('Tecnicas/Visualizacion'))->middleware('auth')->name('visualizacion');
+Route::get('/journaling',    fn() => Inertia::render('Tecnicas/Journaling'))->middleware('auth')->name('journaling');
+
 require __DIR__.'/auth.php';

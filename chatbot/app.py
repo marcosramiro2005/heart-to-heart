@@ -4,8 +4,9 @@ import random
 from hearty.preguntas import FLUJO_PREGUNTAS
 from hearty.respuestas import (
     RESPUESTAS, PALABRAS_CLAVE, CONSEJOS_GENERALES,
-    NOMBRES_TECNICAS, RUTAS_TECNICAS
+    FRASES_MOTIVACIONALES, NOMBRES_TECNICAS, RUTAS_TECNICAS
 )
+import random
 
 app = Flask(__name__)
 CORS(app, origins=["http://127.0.0.1:8000", "http://localhost:8000"])
@@ -27,45 +28,41 @@ def detectar_emocion_texto_libre(texto: str) -> dict | None:
 
 
 def construir_respuesta_con_memoria(mensaje: str, contexto: dict, historial: list) -> dict:
-    """
-    Construye la respuesta de Hearty combinando el diccionario de respuestas
-    con la detección de texto libre y el contexto de sesiones anteriores.
-    """
-    # 1. Buscar respuesta en el diccionario de opciones predefinidas
     respuesta_data = RESPUESTAS.get(mensaje)
+    es_crisis = False
 
-    # 2. Si no está en el diccionario, intentar detección por texto libre
     if not respuesta_data:
         deteccion = detectar_emocion_texto_libre(mensaje)
         if deteccion:
             respuesta_data = {
-                "respuesta":        deteccion["respuesta"],
-                "tecnicas":         deteccion["tecnicas"],
+                "respuesta":         deteccion["respuesta"],
+                "tecnicas":          deteccion["tecnicas"],
                 "emocion_detectada": deteccion["emocion"],
                 "intensidad":        deteccion["intensidad"],
+                "es_crisis":         deteccion.get("es_crisis", False),
             }
+            es_crisis = deteccion.get("es_crisis", False)
 
-    # 3. Si sigue sin encontrar nada, respuesta genérica empática
     if not respuesta_data:
         respuesta_data = {
-            "respuesta": _respuesta_generica_con_memoria(historial),
-            "tecnicas":  [],
+            "respuesta":         _respuesta_generica_con_memoria(historial),
+            "tecnicas":          [],
             "emocion_detectada": None,
-            "intensidad": None,
+            "intensidad":        None,
         }
 
-    # 4. Personalizar respuesta con el historial si existe
     respuesta_texto = respuesta_data.get("respuesta", "")
-    if historial and len(historial) > 0:
+
+    # Personalizar con historial
+    if historial and len(historial) > 0 and not es_crisis:
         emocion_anterior = historial[-1].get("emocion") if historial else None
         emocion_actual   = respuesta_data.get("emocion_detectada")
         if emocion_anterior and emocion_actual and emocion_anterior != emocion_actual:
-            if emocion_actual in ["alegría", "calma"] and emocion_anterior in ["ansiedad", "tristeza"]:
-                respuesta_texto = f"Noto que la última vez te sentías {emocion_anterior} y hoy pareces mejor 😊 ¡Sigue cuidándote! " + respuesta_texto
+            if emocion_actual in ["alegría", "calma"] and emocion_anterior in ["ansiedad", "tristeza", "enfado"]:
+                respuesta_texto = f"Noto que estás mejor que la última vez que hablamos 😊 Eso me alegra mucho. " + respuesta_texto
             elif emocion_actual in ["ansiedad", "tristeza"] and emocion_anterior in ["alegría", "calma"]:
-                respuesta_texto = f"La última vez que hablamos te sentías {emocion_anterior}. Hoy parece que las cosas están más difíciles 💙 Estoy aquí. " + respuesta_texto
+                respuesta_texto = f"Parece que las cosas han cambiado desde la última vez 💙 Estoy aquí. " + respuesta_texto
 
-    # 5. Formatear técnicas sugeridas
     tecnicas_ids = respuesta_data.get("tecnicas", [])
     tecnicas_formateadas = [
         {
@@ -76,13 +73,21 @@ def construir_respuesta_con_memoria(mensaje: str, contexto: dict, historial: lis
         for t in tecnicas_ids
     ]
 
+    # Frase motivacional si no es crisis
+    frase = None
+    if not es_crisis:
+        frase = respuesta_data.get("frase_motivacional") or random.choice(FRASES_MOTIVACIONALES)
+
     return {
-        "respuesta":        respuesta_texto,
-        "tecnicas":         tecnicas_formateadas,
+        "respuesta":         respuesta_texto,
+        "tecnicas":          tecnicas_formateadas,
         "emocion_detectada": respuesta_data.get("emocion_detectada"),
         "intensidad":        respuesta_data.get("intensidad"),
-        "consejo":          random.choice(CONSEJOS_GENERALES) if tecnicas_ids else None,
-        "accion":           respuesta_data.get("accion"),
+        "consejo":           random.choice(CONSEJOS_GENERALES) if tecnicas_ids and not es_crisis else None,
+        "frase_motivacional": frase,
+        "accion":            respuesta_data.get("accion"),
+        "es_crisis":         es_crisis,
+        "recurso_crisis":    respuesta_data.get("recurso_crisis", False),
     }
 
 

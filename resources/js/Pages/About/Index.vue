@@ -106,7 +106,7 @@ export default {
                 { emoji: '💬', titulo: 'Chatbot Hearty',      descripcion: 'Un asistente emocional que te escucha, detecta tu estado de ánimo y te sugiere técnicas personalizadas.' },
                 { emoji: '📊', titulo: 'Seguimiento emocional', descripcion: 'Registra tus emociones cada día y descubre patrones en tu bienestar con gráficas visuales.' },
                 { emoji: '🫁', titulo: 'Técnicas de bienestar', descripcion: 'Respiración guiada, sonidos relajantes, diario de gratitud, infusiones y ejercicio físico.' },
-                { emoji: '📰', titulo: 'Noticias y recursos',  descripcion: 'Artículos actualizados sobre salud mental y una biblioteca de recursos escritos por nuestro equipo.' },
+                { emoji: '📰', titulo: 'Biblioteca y recursos',  descripcion: 'Artículos actualizados sobre salud mental y una biblioteca de recursos escritos por nuestro equipo.' },
                 { emoji: '💬', titulo: 'Comunidad',           descripcion: 'Un foro de autoayuda donde compartir experiencias y apoyar a otros, con opción de anonimato.' },
                 { emoji: '🏆', titulo: 'Sistema de logros',   descripcion: 'Gamificación positiva que te motiva a mantener hábitos saludables con badges y niveles.' },
             ],

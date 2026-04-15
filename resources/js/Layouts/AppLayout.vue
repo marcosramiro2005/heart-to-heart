@@ -2,6 +2,7 @@
 import { Link } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import AchievementToast from '@/Components/AchievementToast.vue'
+import AppFooter from '@/Components/AppFooter.vue'
 
 const menuOpen = ref(false)
 
@@ -9,7 +10,6 @@ const navLinks = [
     { name: 'Inicio',          href: '/home' },
     { name: 'Mis emociones',   href: '/mis-emociones' },
     { name: 'Biblioteca',      href: '/biblioteca' },
-    { name: 'Recursos',        href: '/recursos' },
     { name: 'Comunidad',       href: '/comunidad' },
     { name: 'Mis logros',      href: '/logros' },
     { name: '¿Quiénes somos?', href: '/quienes-somos' },
@@ -19,33 +19,26 @@ const navLinks = [
 <template>
     <div class="app-wrapper">
 
-        <!-- Navbar -->
         <nav class="navbar">
             <div class="navbar-inner">
-                <!-- Logo -->
+
                 <Link href="/home" class="nav-logo">
                     <img src="/images/logo.png" alt="Heart to Heart" />
                     <span>HEART TO HEART</span>
                 </Link>
 
-                <!-- Links escritorio -->
                 <ul class="nav-links">
                     <li v-for="link in navLinks" :key="link.name">
                         <Link :href="link.href">{{ link.name }}</Link>
                     </li>
                 </ul>
 
-                <a href="/perfil" class="nav-perfil">
-                    {{ $page.props.auth?.user?.avatar || '👤' }}
-                </a>
-
-                <!-- Menú hamburguesa móvil -->
                 <button class="hamburger" @click="menuOpen = !menuOpen">
                     <span></span><span></span><span></span>
                 </button>
+
             </div>
 
-            <!-- Menú móvil desplegable -->
             <div v-if="menuOpen" class="mobile-menu">
                 <Link
                     v-for="link in navLinks"
@@ -58,11 +51,14 @@ const navLinks = [
             </div>
         </nav>
 
-        <!-- Contenido de la página -->
         <main>
             <slot />
         </main>
-    <AchievementToast />
+
+        <AppFooter />
+
+        <AchievementToast />
+
     </div>
 </template>
 
@@ -72,7 +68,6 @@ const navLinks = [
     background: #fff;
 }
 
-/* ── Navbar ── */
 .navbar {
     position: sticky;
     top: 0;
@@ -130,7 +125,6 @@ const navLinks = [
     color: #4ECDC4;
 }
 
-/* ── Hamburguesa ── */
 .hamburger {
     display: none;
     flex-direction: column;
@@ -149,7 +143,6 @@ const navLinks = [
     border-radius: 2px;
 }
 
-/* ── Menú móvil ── */
 .mobile-menu {
     display: flex;
     flex-direction: column;
@@ -165,25 +158,8 @@ const navLinks = [
     color: #2D2D2D;
 }
 
-.nav-perfil {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #E8FAF9;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    text-decoration: none;
-    border: 2px solid #4ECDC4;
-    transition: transform 0.2s;
-}
-
-.nav-perfil:hover { transform: scale(1.1); }
-
-/* ── Responsive ── */
 @media (max-width: 768px) {
-    .nav-links { display: none; }
-    .hamburger { display: flex; }
+    .nav-links  { display: none; }
+    .hamburger  { display: flex; }
 }
 </style>
