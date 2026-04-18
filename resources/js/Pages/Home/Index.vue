@@ -3,16 +3,21 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import { router } from '@inertiajs/vue3'
 
 const tecnicas = [
-    { id: 'respiracion',   nombre: 'Respiración',       color: '#d4edda', icon: '🫁', ruta: '/respiracion' },
-    { id: 'meditacion',    nombre: 'Meditación',         color: '#e8d5f5', icon: '🧘', ruta: '/meditacion' },
-    { id: 'sonidos',       nombre: 'Sonidos Relajantes', color: '#d0eaf8', icon: '🎵', ruta: '/sonidos' },
-    { id: 'diario',        nombre: 'Diario de Gratitud', color: '#fff9c4', icon: '📓', ruta: '/diario' },
-    { id: 'tapping',       nombre: 'EFT Tapping',        color: '#ffecd2', icon: '👆', ruta: '/tapping' },
-    { id: 'visualizacion', nombre: 'Visualización',      color: '#ffd5e5', icon: '🌈', ruta: '/visualizacion' },
-    { id: 'yoga',          nombre: 'Yoga suave',         color: '#d4f5e9', icon: '🤸', ruta: '/yoga' },
-    { id: 'journaling',    nombre: 'Journaling',         color: '#e8f4f8', icon: '📝', ruta: '/journaling' },
-    { id: 'infusiones',    nombre: 'Infusiones',         color: '#e8d5f5', icon: '🍵', ruta: '/infusiones' },
-    { id: 'ejercicio',     nombre: 'Ejercicio',          color: '#ffd5d5', icon: '🏃', ruta: '/ejercicio' },
+    { id: 'respiracion',       nombre: 'Respiración',          color: '#d4edda', icon: '🫁', ruta: '/respiracion' },
+    { id: 'meditacion',        nombre: 'Meditación',            color: '#e8d5f5', icon: '🧘', ruta: '/meditacion' },
+    { id: 'sonidos',           nombre: 'Sonidos',               color: '#d0eaf8', icon: '🎵', ruta: '/sonidos' },
+    { id: 'diario',            nombre: 'Diario gratitud',       color: '#fff9c4', icon: '📓', ruta: '/diario' },
+    { id: 'tapping',           nombre: 'EFT Tapping',           color: '#ffecd2', icon: '👆', ruta: '/tapping' },
+    { id: 'visualizacion',     nombre: 'Visualización',         color: '#ffd5e5', icon: '🌈', ruta: '/visualizacion' },
+    { id: 'yoga',              nombre: 'Yoga suave',            color: '#d4f5e9', icon: '🤸', ruta: '/yoga' },
+    { id: 'journaling',        nombre: 'Journaling',            color: '#e8f4f8', icon: '📝', ruta: '/journaling' },
+    { id: 'infusiones',        nombre: 'Infusiones',            color: '#e8d5f5', icon: '🍵', ruta: '/infusiones' },
+    { id: 'ejercicio',         nombre: 'Ejercicio',             color: '#ffd5d5', icon: '🏃', ruta: '/ejercicio' },
+    { id: 'grounding',         nombre: '5-4-3-2-1',             color: '#d0eaf8', icon: '🌍', ruta: '/tecnica-5-4-3-2-1' },
+    { id: 'autocompasion',     nombre: 'Autocompasión',         color: '#fce4ec', icon: '💗', ruta: '/autocompasion' },
+    { id: 'musicoterapia',     nombre: 'Musicoterapia',         color: '#e8eaf6', icon: '🎶', ruta: '/musicoterapia' },
+    { id: 'relajacion',        nombre: 'Relajación muscular',   color: '#e0f2f1', icon: '💆', ruta: '/relajacion-muscular' },
+    { id: 'gratitud_visual',   nombre: 'Gratitud visual',       color: '#fff8e1', icon: '✨', ruta: '/gratitud-visual' },
 ]
 
 const irATecnica = (ruta) => {
@@ -217,6 +222,10 @@ const irAHearty = () => {
     grid-template-columns: repeat(5, 1fr);
     gap: 1rem;
 }
+
+@media (max-width: 1100px) { .tecnicas-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 800px)  { .tecnicas-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 520px)  { .tecnicas-grid { grid-template-columns: repeat(2, 1fr); } }
 
 .tecnica-card {
     display: flex;
