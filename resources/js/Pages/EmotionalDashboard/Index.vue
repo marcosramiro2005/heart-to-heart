@@ -1,128 +1,107 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue'
-import { ref, onMounted } from 'vue'
-import { useForm } from '@inertiajs/vue3'
+import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 
 const props = defineProps({
-    evolucion:    Object,
-    distribucion: Object,
-    racha:        Object,
-    registroHoy:  Object,
-    stats:        Object,
-    historial:    Array,
+    graficaLinea:     Array,
+    graficaDona:      Array,
+    calendario:       Object,
+    stats:            Object,
+    insights:         Array,
+    ultimosRegistros: Array,
+    mesActual:        String,
 })
 
-const mostrarFormulario = ref(!props.registroHoy)
-const chartLinea  = ref(null)
-const chartDona   = ref(null)
-
+// ── Registro de emoción ──
 const emociones = [
-    { label: '😊 Alegría',   color: '#FFD700' },
-    { label: '😌 Calma',     color: '#4ECDC4' },
-    { label: '😰 Ansiedad',  color: '#FF8C42' },
-    { label: '😢 Tristeza',  color: '#6B9FD4' },
-    { label: '😠 Enfado',    color: '#E63946' },
-    { label: '😴 Cansancio', color: '#9B8EC4' },
+    { id: 'alegría',   emoji: '😊', label: 'Alegría',   color: '#FFD700' },
+    { id: 'calma',     emoji: '😌', label: 'Calma',     color: '#4ECDC4' },
+    { id: 'ansiedad',  emoji: '😰', label: 'Ansiedad',  color: '#FF8C42' },
+    { id: 'tristeza',  emoji: '😢', label: 'Tristeza',  color: '#6B9FD4' },
+    { id: 'enfado',    emoji: '😠', label: 'Enfado',    color: '#E63946' },
+    { id: 'cansancio', emoji: '😴', label: 'Cansancio', color: '#9B8EC4' },
 ]
 
-const actividades = [
-    '🏠 En casa', '💼 Trabajando', '🎓 Estudiando',
-    '🏃 Ejercicio', '👥 Con amigos', '🌿 En naturaleza'
-]
+const emocionSeleccionada = ref('')
+const intensidad          = ref(5)
+const nota                = ref('')
+const enviando            = ref(false)
+const registrado          = ref(false)
 
-const form = useForm({
-    emotion:   '',
-    intensity: 5,
-    notes:     '',
-    activity:  '',
+const colorEmocion = (id) => emociones.find(e => e.id === id)?.color ?? '#4ECDC4'
+
+const registrarEmocion = async () => {
+    if (!emocionSeleccionada.value) return
+    enviando.value = true
+    try {
+        await axios.post('/mis-emociones/registrar', {
+            emotion:   emocionSeleccionada.value,
+            intensity: intensidad.value,
+            note:      nota.value,
+        })
+        registrado.value         = true
+        emocionSeleccionada.value = ''
+        intensidad.value          = 5
+        nota.value                = ''
+        setTimeout(() => registrado.value = false, 3000)
+    } catch (e) {
+        console.error(e)
+    } finally {
+        enviando.value = false
+    }
+}
+
+// ── Calendario ──
+const diasDelMes = computed(() => {
+    const hoy    = new Date()
+    const año    = hoy.getFullYear()
+    const mes    = hoy.getMonth()
+    const primer = new Date(año, mes, 1).getDay()
+    const total  = new Date(año, mes + 1, 0).getDate()
+    const blancos = primer === 0 ? 6 : primer - 1
+    const dias = []
+    for (let i = 0; i < blancos; i++) dias.push(null)
+    for (let d = 1; d <= total; d++) dias.push(d)
+    return dias
 })
 
-const submit = () => {
-    form.post('/mis-emociones/registrar', {
-        onSuccess: () => mostrarFormulario.value = false
-    })
+const nombreMes = computed(() => {
+    return new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
+})
+
+const getDiaCalendario = (dia) => {
+    if (!dia) return null
+    const hoy  = new Date()
+    const key  = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`
+    return props.calendario[key] ?? null
 }
 
-const exportarPDF = async () => {
-    window.print()
+const esHoy = (dia) => {
+    return dia === new Date().getDate()
 }
 
-onMounted(async () => {
-    const Chart = (await import('chart.js/auto')).default
+// ── Insights ──
+const iconoInsight = (tipo) => ({
+    logro:       '🏆',
+    positivo:    '✨',
+    atencion:    '💙',
+    info:        '💡',
+    recordatorio:'📓',
+}[tipo] ?? '💡')
 
-    // ── Gráfica de línea — evolución ──
-    if (chartLinea.value && Object.keys(props.evolucion).length > 0) {
-        new Chart(chartLinea.value, {
-            type: 'line',
-            data: {
-                labels: Object.keys(props.evolucion),
-                datasets: [{
-                    label: 'Intensidad emocional',
-                    data: Object.values(props.evolucion),
-                    borderColor: '#4ECDC4',
-                    backgroundColor: 'rgba(78,205,196,0.1)',
-                    borderWidth: 2.5,
-                    pointBackgroundColor: '#4ECDC4',
-                    pointRadius: 4,
-                    tension: 0.4,
-                    fill: true,
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: ctx => `Intensidad: ${ctx.raw}/10`
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        min: 0,
-                        max: 10,
-                        ticks: { stepSize: 2 },
-                        grid: { color: 'rgba(0,0,0,0.05)' }
-                    },
-                    x: {
-                        grid: { display: false }
-                    }
-                }
-            }
-        })
-    }
+const colorInsight = (tipo) => ({
+    logro:       '#fff9c4',
+    positivo:    '#d4edda',
+    atencion:    '#d0eaf8',
+    info:        '#fafafa',
+    recordatorio:'#ffecd2',
+}[tipo] ?? '#fafafa')
 
-    // ── Gráfica de dona — distribución ──
-    if (chartDona.value && Object.keys(props.distribucion).length > 0) {
-        const colores = Object.keys(props.distribucion).map(e =>
-            emociones.find(em => em.label === e)?.color ?? '#ccc'
-        )
-
-        new Chart(chartDona.value, {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(props.distribucion),
-                datasets: [{
-                    data: Object.values(props.distribucion),
-                    backgroundColor: colores,
-                    borderWidth: 2,
-                    borderColor: '#fff',
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { padding: 16, font: { size: 12 } }
-                    }
-                },
-                cutout: '65%',
-            }
-        })
-    }
+// ── Gráfica simple de barras ──
+const maxIntensidad = computed(() => {
+    if (!props.graficaLinea?.length) return 10
+    return Math.max(...props.graficaLinea.map(d => d.intensidad), 10)
 })
 </script>
 
@@ -131,212 +110,258 @@ onMounted(async () => {
         <div class="ed-wrapper">
 
             <!-- Cabecera -->
-            <div class="ed-hero">
+            <div class="ed-header">
                 <div>
                     <h1>📊 Mis emociones</h1>
-                    <p>Conoce tus patrones emocionales y cuida tu bienestar</p>
+                    <p>Registra cómo te sientes y descubre tus patrones emocionales</p>
                 </div>
-                <button class="btn-exportar" @click="exportarPDF">
-                    📄 Exportar informe
-                </button>
+                <div class="ed-racha">
+                    <span class="racha-num">{{ stats.racha_actual }}</span>
+                    <span class="racha-label">días seguidos 🔥</span>
+                </div>
             </div>
 
-            <!-- Tarjetas de estadísticas -->
+            <!-- Stats rápidas -->
             <div class="stats-grid">
-                <div class="stat-card racha">
-                    <span class="stat-emoji">{{ racha.emoji }}</span>
-                    <div class="stat-info">
-                        <span class="stat-valor">{{ racha.dias }} días</span>
-                        <span class="stat-label">{{ racha.mensaje }}</span>
-                    </div>
+                <div class="stat-card">
+                    <span class="sc-valor">{{ stats.total_registros }}</span>
+                    <span class="sc-label">Registros totales</span>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-emoji">📝</span>
-                    <div class="stat-info">
-                        <span class="stat-valor">{{ stats.total_registros }}</span>
-                        <span class="stat-label">Registros totales</span>
-                    </div>
+                    <span class="sc-valor">{{ stats.dias_registrados }}</span>
+                    <span class="sc-label">Días este mes</span>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-emoji">💫</span>
-                    <div class="stat-info">
-                        <span class="stat-valor">{{ stats.emocion_frecuente }}</span>
-                        <span class="stat-label">Emoción frecuente</span>
-                    </div>
+                    <span class="sc-valor">{{ stats.intensidad_media }}</span>
+                    <span class="sc-label">Intensidad media</span>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-emoji">🫁</span>
-                    <div class="stat-info">
-                        <span class="stat-valor">{{ stats.sesiones_respira }}</span>
-                        <span class="stat-label">Sesiones respiración</span>
-                    </div>
+                    <span class="sc-valor" style="font-size: 1.3rem">
+                        {{ emociones.find(e => e.id === stats.emocion_frecuente)?.emoji || '💙' }}
+                    </span>
+                    <span class="sc-label">Más frecuente</span>
                 </div>
             </div>
 
-            <!-- Registro de hoy -->
-            <div class="registro-hoy-section">
-                <div class="section-header">
-                    <h2>¿Cómo te sientes hoy?</h2>
-                    <button
-                        v-if="registroHoy && !mostrarFormulario"
-                        class="btn-editar"
-                        @click="mostrarFormulario = true"
-                    >
-                        ✏️ Editar
-                    </button>
-                </div>
+            <div class="ed-grid">
 
-                <!-- Ya registrado hoy -->
-                <div v-if="registroHoy && !mostrarFormulario" class="registrado-hoy">
-                    <div class="registrado-badge"
-                        :style="{ backgroundColor: registroHoy.color ?? '#4ECDC4' }">
-                        <span>{{ registroHoy.emotion }}</span>
-                    </div>
-                    <div class="registrado-info">
-                        <div class="intensidad-bar">
-                            <span>Intensidad: {{ registroHoy.intensity }}/10</span>
-                            <div class="bar-fondo">
-                                <div
-                                    class="bar-relleno"
-                                    :style="{
-                                        width: `${registroHoy.intensity * 10}%`,
-                                        backgroundColor: registroHoy.color ?? '#4ECDC4'
-                                    }"
-                                ></div>
-                            </div>
-                        </div>
-                        <p v-if="registroHoy.notes" class="registrado-nota">
-                            "{{ registroHoy.notes }}"
-                        </p>
-                    </div>
-                </div>
+                <!-- Columna izquierda -->
+                <div class="ed-col">
 
-                <!-- Formulario de registro -->
-                <div v-if="mostrarFormulario" class="form-registro">
-                    <form @submit.prevent="submit">
+                    <!-- Registrar emoción -->
+                    <div class="ed-card">
+                        <h2>¿Cómo te sientes ahora?</h2>
 
-                        <div class="field">
-                            <label>¿Qué emoción predomina?</label>
-                            <div class="emociones-selector">
-                                <button
-                                    v-for="em in emociones"
-                                    :key="em.label"
-                                    type="button"
-                                    class="em-btn"
-                                    :class="{ selected: form.emotion === em.label }"
-                                    :style="form.emotion === em.label ? { backgroundColor: em.color, borderColor: em.color } : {}"
-                                    @click="form.emotion = em.label"
-                                >
-                                    {{ em.label }}
-                                </button>
-                            </div>
-                            <span v-if="form.errors.emotion" class="error">{{ form.errors.emotion }}</span>
+                        <div class="emociones-grid">
+                            <button
+                                v-for="em in emociones"
+                                :key="em.id"
+                                class="em-btn"
+                                :class="{ activa: emocionSeleccionada === em.id }"
+                                :style="emocionSeleccionada === em.id
+                                    ? { backgroundColor: em.color + '30', borderColor: em.color }
+                                    : {}"
+                                @click="emocionSeleccionada = em.id"
+                            >
+                                <span class="em-emoji">{{ em.emoji }}</span>
+                                <span class="em-label">{{ em.label }}</span>
+                            </button>
                         </div>
 
-                        <div class="field">
-                            <label>Intensidad: <strong>{{ form.intensity }}/10</strong></label>
+                        <div v-if="emocionSeleccionada" class="intensidad-control">
+                            <label>
+                                Intensidad:
+                                <strong :style="{ color: colorEmocion(emocionSeleccionada) }">
+                                    {{ intensidad }}/10
+                                </strong>
+                            </label>
                             <input
                                 type="range"
-                                v-model="form.intensity"
+                                v-model="intensidad"
                                 min="1"
                                 max="10"
-                                class="intensidad-slider"
+                                :style="{ accentColor: colorEmocion(emocionSeleccionada) }"
                             />
-                            <div class="slider-labels">
-                                <span>Muy leve</span>
-                                <span>Moderada</span>
-                                <span>Muy intensa</span>
+                            <div class="int-labels">
+                                <span>Suave</span>
+                                <span>Moderado</span>
+                                <span>Intenso</span>
                             </div>
                         </div>
 
-                        <div class="field">
-                            <label>¿Qué estás haciendo hoy?</label>
-                            <div class="actividades-selector">
-                                <button
-                                    v-for="act in actividades"
-                                    :key="act"
-                                    type="button"
-                                    class="act-btn"
-                                    :class="{ selected: form.activity === act }"
-                                    @click="form.activity = act"
-                                >
-                                    {{ act }}
-                                </button>
-                            </div>
-                        </div>
+                        <textarea
+                            v-model="nota"
+                            placeholder="¿Quieres añadir una nota? (opcional)"
+                            rows="3"
+                            class="nota-input"
+                        ></textarea>
 
-                        <div class="field">
-                            <label>Nota personal (opcional)</label>
-                            <textarea
-                                v-model="form.notes"
-                                placeholder="¿Qué ha pasado hoy? ¿Cómo lo estás llevando?"
-                                rows="3"
-                                maxlength="300"
-                            ></textarea>
-                            <span class="char-count">{{ form.notes.length }}/300</span>
+                        <div v-if="registrado" class="registro-ok">
+                            ✅ ¡Emoción registrada! Sigue cuidándote 💚
                         </div>
 
                         <button
-                            type="submit"
-                            class="btn-guardar"
-                            :disabled="form.processing || !form.emotion"
+                            class="btn-registrar"
+                            @click="registrarEmocion"
+                            :disabled="!emocionSeleccionada || enviando"
                         >
-                            {{ form.processing ? 'Guardando...' : '💚 Guardar emoción de hoy' }}
+                            {{ enviando ? 'Guardando...' : '💾 Registrar emoción' }}
                         </button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Gráficas -->
-            <div class="graficas-grid">
-
-                <!-- Evolución últimos 30 días -->
-                <div class="grafica-card grande">
-                    <h2>Evolución últimos 30 días</h2>
-                    <div v-if="Object.keys(evolucion).length === 0" class="grafica-empty">
-                        Registra tus emociones para ver tu evolución 📈
                     </div>
-                    <canvas v-else ref="chartLinea" height="100"></canvas>
-                </div>
 
-                <!-- Distribución emocional -->
-                <div class="grafica-card">
-                    <h2>Distribución emocional</h2>
-                    <div v-if="Object.keys(distribucion).length === 0" class="grafica-empty">
-                        Sin datos todavía 🌱
-                    </div>
-                    <canvas v-else ref="chartDona"></canvas>
-                </div>
-
-            </div>
-
-            <!-- Historial reciente -->
-            <div class="historial-section">
-                <h2>Historial reciente</h2>
-                <div v-if="historial.length === 0" class="historial-empty">
-                    Aún no tienes registros. ¡Empieza hoy! 💚
-                </div>
-                <div class="historial-lista">
-                    <div
-                        v-for="registro in historial"
-                        :key="registro.id"
-                        class="historial-item"
-                    >
-                        <div
-                            class="historial-color"
-                            :style="{ backgroundColor: registro.color }"
-                        ></div>
-                        <div class="historial-info">
-                            <span class="historial-emocion">{{ registro.emotion }}</span>
-                            <span class="historial-nota" v-if="registro.notes">
-                                {{ registro.notes }}
-                            </span>
-                        </div>
-                        <div class="historial-right">
-                            <span class="historial-intensidad">{{ registro.intensity }}/10</span>
-                            <span class="historial-fecha">{{ registro.recorded_at }}</span>
+                    <!-- Insights -->
+                    <div class="ed-card">
+                        <h2>💡 Insights personalizados</h2>
+                        <div class="insights-lista">
+                            <div
+                                v-for="(insight, i) in insights"
+                                :key="i"
+                                class="insight-item"
+                                :style="{ backgroundColor: colorInsight(insight.tipo) }"
+                            >
+                                <span class="insight-icono">{{ iconoInsight(insight.tipo) }}</span>
+                                <p>{{ insight.mensaje }}</p>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Últimos registros -->
+                    <div class="ed-card">
+                        <h2>🕐 Últimos registros</h2>
+                        <div v-if="ultimosRegistros.length === 0" class="empty-state">
+                            No hay registros aún. ¡Registra tu primera emoción!
+                        </div>
+                        <div v-else class="registros-lista">
+                            <div
+                                v-for="reg in ultimosRegistros"
+                                :key="reg.id"
+                                class="reg-item"
+                                :style="{ borderLeft: `4px solid ${colorEmocion(reg.emotion)}` }"
+                            >
+                                <span class="reg-emoji">{{ reg.emoji }}</span>
+                                <div class="reg-info">
+                                    <span class="reg-emocion">{{ reg.emotion }}</span>
+                                    <span class="reg-nota" v-if="reg.note">{{ reg.note }}</span>
+                                    <span class="reg-fecha">{{ reg.fecha }} · {{ reg.hora }}</span>
+                                </div>
+                                <div class="reg-intensidad">
+                                    <span
+                                        class="reg-int-badge"
+                                        :style="{ backgroundColor: colorEmocion(reg.emotion) + '25', color: colorEmocion(reg.emotion) }"
+                                    >
+                                        {{ reg.intensity }}/10
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Columna derecha -->
+                <div class="ed-col">
+
+                    <!-- Calendario emocional -->
+                    <div class="ed-card">
+                        <h2>📅 Calendario emocional</h2>
+                        <p class="cal-mes">{{ nombreMes }}</p>
+
+                        <div class="calendario">
+                            <div class="cal-dias-semana">
+                                <span v-for="d in ['L','M','X','J','V','S','D']" :key="d">{{ d }}</span>
+                            </div>
+                            <div class="cal-grid">
+                                <div
+                                    v-for="(dia, i) in diasDelMes"
+                                    :key="i"
+                                    class="cal-dia"
+                                    :class="{
+                                        'vacio': !dia,
+                                        'hoy': dia && esHoy(dia),
+                                        'con-registro': dia && getDiaCalendario(dia)
+                                    }"
+                                    :style="getDiaCalendario(dia)
+                                        ? { backgroundColor: colorEmocion(getDiaCalendario(dia).emocion) + '30', borderColor: colorEmocion(getDiaCalendario(dia).emocion) }
+                                        : {}"
+                                    :title="getDiaCalendario(dia) ? `${getDiaCalendario(dia).emocion} (${getDiaCalendario(dia).intensidad}/10)` : ''"
+                                >
+                                    <span class="cal-num">{{ dia }}</span>
+                                    <span v-if="getDiaCalendario(dia)" class="cal-emoji">
+                                        {{ emociones.find(e => e.id === getDiaCalendario(dia).emocion)?.emoji }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cal-leyenda">
+                            <div v-for="em in emociones" :key="em.id" class="ley-item">
+                                <span class="ley-punto" :style="{ backgroundColor: em.color }"></span>
+                                <span>{{ em.emoji }} {{ em.label }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gráfica de barras últimos 14 días -->
+                    <div class="ed-card">
+                        <h2>📈 Intensidad últimos 14 días</h2>
+                        <div v-if="graficaLinea.length === 0" class="empty-state">
+                            Sin datos suficientes aún
+                        </div>
+                        <div v-else class="grafica-barras">
+                            <div
+                                v-for="(punto, i) in graficaLinea.slice(-14)"
+                                :key="i"
+                                class="gb-col"
+                            >
+                                <div class="gb-barra-wrap">
+                                    <div
+                                        class="gb-barra"
+                                        :style="{
+                                            height: `${(punto.intensidad / maxIntensidad) * 100}%`,
+                                            backgroundColor: punto.intensidad >= 7 ? '#E63946' : punto.intensidad >= 4 ? '#FF8C42' : '#4ECDC4'
+                                        }"
+                                    ></div>
+                                </div>
+                                <span class="gb-label">{{ punto.fecha?.slice(-2) }}</span>
+                            </div>
+                        </div>
+                        <div class="grafica-leyenda">
+                            <span class="gl-item" style="color: #4ECDC4">● Baja</span>
+                            <span class="gl-item" style="color: #FF8C42">● Media</span>
+                            <span class="gl-item" style="color: #E63946">● Alta</span>
+                        </div>
+                    </div>
+
+                    <!-- Distribución de emociones -->
+                    <div class="ed-card">
+                        <h2>🥧 Este mes</h2>
+                        <div v-if="graficaDona.length === 0" class="empty-state">
+                            Sin datos este mes
+                        </div>
+                        <div v-else class="distribucion">
+                            <div
+                                v-for="item in graficaDona"
+                                :key="item.emocion"
+                                class="dist-item"
+                            >
+                                <div class="dist-info">
+                                    <span>{{ emociones.find(e => e.id === item.emocion)?.emoji }}</span>
+                                    <span class="dist-nombre">{{ item.emocion }}</span>
+                                </div>
+                                <div class="dist-barra-wrap">
+                                    <div
+                                        class="dist-barra"
+                                        :style="{
+                                            width: `${(item.total / Math.max(...graficaDona.map(d => d.total))) * 100}%`,
+                                            backgroundColor: colorEmocion(item.emocion)
+                                        }"
+                                    ></div>
+                                </div>
+                                <span class="dist-total">{{ item.total }}x</span>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -346,19 +371,15 @@ onMounted(async () => {
 
 <style scoped>
 .ed-wrapper {
-    max-width: 1000px;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 2rem 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.5rem;
 }
 
-/* ── Hero ── */
-.ed-hero {
-    background: #4ECDC4;
-    border-radius: 16px;
-    padding: 1.5rem 2rem;
+.ed-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -366,28 +387,19 @@ onMounted(async () => {
     gap: 1rem;
 }
 
-.ed-hero h1 {
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: #1a1a1a;
-    margin: 0 0 0.3rem;
+.ed-header h1 { font-size: 1.6rem; font-weight: 800; margin: 0; }
+.ed-header p  { color: #666; margin: 0.25rem 0 0; }
+
+.ed-racha {
+    background: #fff9c4;
+    border: 2px solid #FFD700;
+    border-radius: 16px;
+    padding: 0.75rem 1.5rem;
+    text-align: center;
 }
 
-.ed-hero p { color: #2D2D2D; margin: 0; font-size: 0.95rem; }
-
-.btn-exportar {
-    padding: 0.7rem 1.4rem;
-    background: white;
-    color: #3BAFA7;
-    font-weight: 700;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: transform 0.2s;
-}
-
-.btn-exportar:hover { transform: translateY(-2px); }
+.racha-num   { display: block; font-size: 2rem; font-weight: 900; color: #f57f17; }
+.racha-label { display: block; font-size: 0.78rem; color: #888; font-weight: 600; }
 
 /* ── Stats ── */
 .stats-grid {
@@ -400,306 +412,321 @@ onMounted(async () => {
     background: white;
     border-radius: 14px;
     padding: 1.25rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
     border: 1px solid #f0f0f0;
-    transition: box-shadow 0.2s;
-}
-
-.stat-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.07); }
-.stat-card.racha { border-left: 4px solid #4ECDC4; }
-
-.stat-emoji { font-size: 2rem; }
-
-.stat-info {
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    align-items: center;
+    gap: 0.3rem;
+    text-align: center;
 }
 
-.stat-valor {
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: #2D2D2D;
+.sc-valor { font-size: 1.8rem; font-weight: 900; color: #4ECDC4; }
+.sc-label { font-size: 0.78rem; color: #888; font-weight: 600; }
+
+/* ── Grid principal ── */
+.ed-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
 }
 
-.stat-label {
-    font-size: 0.78rem;
-    color: #888;
-}
+.ed-col { display: flex; flex-direction: column; gap: 1.5rem; }
 
-/* ── Registro hoy ── */
-.registro-hoy-section {
+.ed-card {
     background: white;
     border-radius: 16px;
     padding: 1.5rem;
     border: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
-.section-header {
+.ed-card h2 { font-size: 1rem; font-weight: 700; margin: 0; color: #2D2D2D; }
+
+/* ── Emociones ── */
+.emociones-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+.em-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.75rem 0.5rem;
+    border: 2px solid #f0f0f0;
+    border-radius: 12px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.em-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+.em-btn.activa { transform: translateY(-2px); }
+
+.em-emoji { font-size: 1.5rem; }
+.em-label { font-size: 0.75rem; font-weight: 600; color: #2D2D2D; }
+
+/* ── Intensidad ── */
+.intensidad-control {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.intensidad-control label { font-size: 0.88rem; font-weight: 600; color: #2D2D2D; }
+.intensidad-control input { width: 100%; height: 6px; cursor: pointer; }
+
+.int-labels {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.25rem;
+    font-size: 0.72rem;
+    color: #aaa;
 }
 
-.section-header h2 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #2D2D2D;
-    margin: 0;
+.nota-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #f0f0f0;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
 }
 
-.btn-editar {
-    padding: 0.4rem 0.9rem;
+.nota-input:focus { border-color: #4ECDC4; }
+
+.registro-ok {
     background: #E8FAF9;
-    border: none;
-    border-radius: 20px;
-    color: #3BAFA7;
+    border: 1.5px solid #4ECDC4;
+    border-radius: 10px;
+    padding: 0.6rem 1rem;
     font-size: 0.85rem;
+    color: #3BAFA7;
     font-weight: 600;
-    cursor: pointer;
+    text-align: center;
 }
 
-.registrado-hoy {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-}
-
-.registrado-badge {
-    padding: 0.75rem 1.5rem;
-    border-radius: 25px;
+.btn-registrar {
+    padding: 0.85rem;
+    background: #4ECDC4;
     color: white;
     font-weight: 700;
-    font-size: 1rem;
-    white-space: nowrap;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: background 0.2s;
+    width: 100%;
 }
 
-.registrado-info { flex: 1; }
+.btn-registrar:hover:not(:disabled) { background: #3BAFA7; }
+.btn-registrar:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.intensidad-bar { display: flex; flex-direction: column; gap: 0.4rem; }
-.intensidad-bar span { font-size: 0.85rem; color: #666; }
+/* ── Insights ── */
+.insights-lista { display: flex; flex-direction: column; gap: 0.6rem; }
 
-.bar-fondo {
+.insight-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+}
+
+.insight-icono { font-size: 1.2rem; flex-shrink: 0; }
+.insight-item p { font-size: 0.85rem; color: #444; line-height: 1.5; margin: 0; }
+
+/* ── Últimos registros ── */
+.registros-lista { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.reg-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    background: #fafafa;
+    border-radius: 8px;
+    padding-left: 0.75rem;
+}
+
+.reg-emoji { font-size: 1.3rem; flex-shrink: 0; }
+.reg-info  { flex: 1; display: flex; flex-direction: column; gap: 0.1rem; }
+.reg-emocion { font-size: 0.85rem; font-weight: 700; color: #2D2D2D; text-transform: capitalize; }
+.reg-nota    { font-size: 0.78rem; color: #666; }
+.reg-fecha   { font-size: 0.72rem; color: #aaa; }
+
+.reg-int-badge {
+    padding: 0.2rem 0.6rem;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+/* ── Calendario ── */
+.cal-mes { font-size: 0.88rem; color: #888; text-align: center; text-transform: capitalize; margin: 0; }
+
+.cal-dias-semana {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 4px;
+}
+
+.cal-dias-semana span {
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #aaa;
+    padding: 0.3rem 0;
+}
+
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.cal-dia {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    border: 1.5px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    cursor: default;
+    transition: transform 0.1s;
+}
+
+.cal-dia:not(.vacio):hover { transform: scale(1.05); }
+.cal-dia.vacio { border: none; background: transparent; }
+
+.cal-dia.hoy {
+    border-color: #4ECDC4;
+    background: #E8FAF9;
+}
+
+.cal-num  { font-size: 0.72rem; font-weight: 600; color: #2D2D2D; }
+.cal-emoji { font-size: 0.7rem; }
+
+.cal-leyenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.ley-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    color: #666;
+}
+
+.ley-punto {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* ── Gráfica barras ── */
+.grafica-barras {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 120px;
+    padding: 0 0.5rem;
+}
+
+.gb-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    gap: 4px;
+}
+
+.gb-barra-wrap {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+}
+
+.gb-barra {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    min-height: 4px;
+    transition: height 0.3s ease;
+}
+
+.gb-label { font-size: 0.65rem; color: #aaa; }
+
+.grafica-leyenda {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.gl-item { font-size: 0.78rem; font-weight: 600; }
+
+/* ── Distribución ── */
+.distribucion { display: flex; flex-direction: column; gap: 0.6rem; }
+
+.dist-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.dist-info {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    width: 90px;
+    flex-shrink: 0;
+}
+
+.dist-nombre { font-size: 0.78rem; font-weight: 600; color: #2D2D2D; text-transform: capitalize; }
+
+.dist-barra-wrap {
+    flex: 1;
     height: 8px;
     background: #f0f0f0;
     border-radius: 4px;
     overflow: hidden;
 }
 
-.bar-relleno {
+.dist-barra {
     height: 100%;
     border-radius: 4px;
-    transition: width 0.5s ease;
+    transition: width 0.3s ease;
+    min-width: 4px;
 }
 
-.registrado-nota {
-    font-size: 0.88rem;
-    color: #888;
-    font-style: italic;
-    margin: 0.5rem 0 0;
-}
+.dist-total { font-size: 0.75rem; color: #888; font-weight: 600; min-width: 24px; text-align: right; }
 
-/* ── Formulario ── */
-.form-registro { display: flex; flex-direction: column; gap: 1.25rem; }
-
-.field { display: flex; flex-direction: column; gap: 0.5rem; }
-
-.field label {
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: #2D2D2D;
-}
-
-.emociones-selector, .actividades-selector {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.em-btn, .act-btn {
-    padding: 0.5rem 1rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 20px;
-    background: white;
-    font-size: 0.88rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: #2D2D2D;
-}
-
-.em-btn.selected { color: white; }
-.act-btn.selected { background: #4ECDC4; border-color: #4ECDC4; color: white; }
-
-.intensidad-slider {
-    width: 100%;
-    accent-color: #4ECDC4;
-    height: 6px;
-}
-
-.slider-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.75rem;
-    color: #aaa;
-}
-
-.field textarea {
-    padding: 0.75rem 1rem;
-    border: 2px solid #e8f5f4;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    font-family: inherit;
-    resize: vertical;
-    outline: none;
-    transition: border-color 0.2s;
-    background: #fafafa;
-}
-
-.field textarea:focus { border-color: #4ECDC4; }
-
-.char-count { font-size: 0.75rem; color: #aaa; text-align: right; }
-
-.btn-guardar {
-    padding: 0.9rem;
-    background: #4ECDC4;
-    color: white;
-    font-weight: 700;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-    font-size: 0.95rem;
-    transition: background 0.2s;
-}
-
-.btn-guardar:hover:not(:disabled) { background: #3BAFA7; }
-.btn-guardar:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.error { font-size: 0.78rem; color: #E63946; }
-
-/* ── Gráficas ── */
-.graficas-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 1.25rem;
-}
-
-.grafica-card {
-    background: white;
-    border-radius: 16px;
-    padding: 1.5rem;
-    border: 1px solid #f0f0f0;
-}
-
-.grafica-card h2 {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #2D2D2D;
-    margin: 0 0 1.25rem;
-}
-
-.grafica-empty {
-    text-align: center;
-    color: #aaa;
-    padding: 2rem;
-    font-size: 0.9rem;
-}
-
-/* ── Historial ── */
-.historial-section {
-    background: white;
-    border-radius: 16px;
-    padding: 1.5rem;
-    border: 1px solid #f0f0f0;
-}
-
-.historial-section h2 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #2D2D2D;
-    margin: 0 0 1rem;
-}
-
-.historial-empty {
-    text-align: center;
-    color: #aaa;
-    padding: 2rem;
-}
-
-.historial-lista { display: flex; flex-direction: column; gap: 0.6rem; }
-
-.historial-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.85rem 1rem;
-    background: #fafafa;
-    border-radius: 10px;
-    transition: background 0.2s;
-}
-
-.historial-item:hover { background: #f0f0f0; }
-
-.historial-color {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.historial-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-}
-
-.historial-emocion {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #2D2D2D;
-}
-
-.historial-nota {
-    font-size: 0.8rem;
-    color: #888;
-    font-style: italic;
-}
-
-.historial-right {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.2rem;
-}
-
-.historial-intensidad {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #4ECDC4;
-}
-
-.historial-fecha {
-    font-size: 0.75rem;
-    color: #aaa;
-}
+.empty-state { color: #aaa; font-size: 0.88rem; text-align: center; padding: 1rem; }
 
 /* ── Responsive ── */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+    .ed-grid   { grid-template-columns: 1fr; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .graficas-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {
-    .stats-grid { grid-template-columns: 1fr; }
-}
-
-/* ── Print ── */
-@media print {
-    .btn-exportar, .form-registro, .btn-editar { display: none; }
-    .ed-wrapper { padding: 0; }
+    .stats-grid     { grid-template-columns: repeat(2, 1fr); }
+    .emociones-grid { grid-template-columns: repeat(2, 1fr); }
 }
 </style>

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Carbon\Carbon;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
@@ -101,5 +102,35 @@ public function savedResources()
 {
     return $this->belongsToMany(Resource::class, 'resource_saves')
         ->withTimestamps();
+}
+
+public function rachaActual(): int
+{
+    $registros = $this->emotionalRecords()
+        ->orderByDesc('created_at')
+        ->pluck('created_at')
+        ->map(fn($d) => $d->toDateString())
+        ->unique()
+        ->values();
+
+    if ($registros->isEmpty()) return 0;
+
+    if ($registros[0] !== now()->toDateString() && 
+        $registros[0] !== now()->subDay()->toDateString()) {
+        return 0;
+    }
+
+    $racha = 1;
+    for ($i = 0; $i < $registros->count() - 1; $i++) {
+        $actual   = \Carbon\Carbon::parse($registros[$i]);
+        $anterior = \Carbon\Carbon::parse($registros[$i + 1]);
+        if ($actual->diffInDays($anterior) === 1) {
+            $racha++;
+        } else {
+            break;
+        }
+    }
+
+    return $racha;
 }
 }

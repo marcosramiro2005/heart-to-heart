@@ -3,9 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\EmotionalRecord;
-use App\Models\BreathingSession;
+use App\Services\AchievementService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Carbon\Carbon;
 
@@ -13,155 +12,180 @@ class EmotionalDashboardController extends Controller
 {
     public function index()
     {
-        $userId = auth()->id();
-        $hoy = Carbon::today();
+        $userId  = auth()->id();
+        $user    = auth()->user();
 
-        // ── Registros últimos 30 días ──
+        // Registros últimos 30 días
         $registros = EmotionalRecord::where('user_id', $userId)
-            ->where('recorded_at', '>=', $hoy->copy()->subDays(29))
-            ->orderBy('recorded_at', 'asc')
+            ->where('created_at', '>=', now()->subDays(30))
+            ->orderBy('created_at', 'asc')
             ->get();
 
-        // ── Datos para gráfica de línea (evolución intensidad) ──
-        $evolucion = $registros->groupBy(fn($r) => Carbon::parse($r->recorded_at)->format('d/m'))
+        // Datos para gráfica de línea
+        $graficaLinea = $registros->groupBy(fn($r) => $r->created_at->format('Y-m-d'))
             ->map(fn($grupo) => round($grupo->avg('intensity'), 1))
-            ->toArray();
+            ->map(fn($avg, $fecha) => ['fecha' => $fecha, 'intensidad' => $avg]);
 
-        // ── Distribución de emociones (gráfica de dona) ──
-        $distribucion = EmotionalRecord::where('user_id', $userId)
-            ->select('emotion', DB::raw('count(*) as total'))
-            ->groupBy('emotion')
-            ->pluck('total', 'emotion')
-            ->toArray();
+        // Datos para gráfica de dona
+        $graficaDona = $registros->groupBy('emotion')
+            ->map(fn($grupo, $emocion) => [
+                'emocion' => $emocion,
+                'total'   => $grupo->count(),
+            ])
+            ->values();
 
-        // ── Racha actual ──
-        $racha = $this->calcularRacha($userId);
+        // Calendario emocional — todos los registros del mes actual
+        $mesActual = now()->format('Y-m');
+        $calendario = EmotionalRecord::where('user_id', $userId)
+            ->whereYear('created_at',  now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->get()
+            ->groupBy(fn($r) => $r->created_at->format('Y-m-d'))
+            ->map(fn($grupo) => [
+                'emocion'    => $grupo->sortByDesc('intensity')->first()->emotion,
+                'intensidad' => round($grupo->avg('intensity'), 1),
+                'total'      => $grupo->count(),
+            ]);
 
-        // ── Registro de hoy ──
-        $registroHoy = EmotionalRecord::where('user_id', $userId)
-            ->whereDate('recorded_at', $hoy)
-            ->first();
+        // Racha actual
+        $racha = $user->rachaActual();
 
-        // ── Estadísticas generales ──
+        // Insights automáticos
+        $insights = $this->generarInsights($registros, $racha);
+
+        // Estadísticas generales
         $stats = [
             'total_registros'  => EmotionalRecord::where('user_id', $userId)->count(),
-            'emocion_frecuente' => $this->emocionMasFrecuente($userId),
-            'intensidad_media' => round(EmotionalRecord::where('user_id', $userId)->avg('intensity') ?? 0, 1),
-            'sesiones_respira' => BreathingSession::where('user_id', $userId)->count(),
+            'racha_actual'     => $racha,
+            'emocion_frecuente'=> $registros->groupBy('emotion')->sortByDesc(fn($g) => $g->count())->keys()->first() ?? 'Sin datos',
+            'intensidad_media' => round($registros->avg('intensity') ?? 0, 1),
+            'mejor_dia'        => $this->mejorDia($registros),
+            'dias_registrados' => $registros->groupBy(fn($r) => $r->created_at->format('Y-m-d'))->count(),
         ];
 
-        // ── Historial reciente ──
-        $historial = EmotionalRecord::where('user_id', $userId)
-            ->orderByDesc('recorded_at')
+        // Últimos 7 registros
+        $ultimosRegistros = EmotionalRecord::where('user_id', $userId)
+            ->orderByDesc('created_at')
             ->take(7)
             ->get()
             ->map(fn($r) => [
-                'id'          => $r->id,
-                'emotion'     => $r->emotion,
-                'intensity'   => $r->intensity,
-                'notes'       => $r->notes,
-                'color'       => $r->color ?? $this->colorEmocion($r->emotion),
-                'recorded_at' => Carbon::parse($r->recorded_at)->format('d/m/Y'),
+                'id'         => $r->id,
+                'emotion'    => $r->emotion,
+                'intensity'  => $r->intensity,
+                'note'       => $r->note,
+                'fecha'      => $r->created_at->format('d/m/Y'),
+                'hora'       => $r->created_at->format('H:i'),
+                'emoji'      => $this->emocionEmoji($r->emotion),
             ]);
 
         return Inertia::render('EmotionalDashboard/Index', [
-            'evolucion'     => $evolucion,
-            'distribucion'  => $distribucion,
-            'racha'         => $racha,
-            'registroHoy'   => $registroHoy,
-            'stats'         => $stats,
-            'historial'     => $historial,
+            'graficaLinea'     => $graficaLinea->values(),
+            'graficaDona'      => $graficaDona,
+            'calendario'       => $calendario,
+            'stats'            => $stats,
+            'insights'         => $insights,
+            'ultimosRegistros' => $ultimosRegistros,
+            'mesActual'        => $mesActual,
         ]);
     }
 
     public function registrar(Request $request)
     {
         $request->validate([
-            'emotion'   => 'required|string',
-            'intensity' => 'required|integer|min:1|max:10',
-            'notes'     => 'nullable|string|max:300',
-            'activity'  => 'nullable|string',
+            'emotion'    => 'required|string',
+            'intensity'  => 'required|integer|min:1|max:10',
+            'note'       => 'nullable|string|max:500',
+            'triggers'   => 'nullable|string|max:200',
+            'activities' => 'nullable|string|max:200',
         ]);
 
-        $achievementService = new \App\Services\AchievementService();
-        $achievementService->verificarLogros(auth()->id());
+        $record = EmotionalRecord::create([
+            'user_id'    => auth()->id(),
+            'emotion'    => $request->emotion,
+            'intensity'  => $request->intensity,
+            'note'       => $request->note,
+            'triggers'   => $request->triggers,
+            'activities' => $request->activities,
+        ]);
 
-        $hoy = Carbon::today();
+        // Verificar logros
+        app(AchievementService::class)->verificar(auth()->user());
 
-        // Un registro por día — actualizar si ya existe
-        EmotionalRecord::updateOrCreate(
-            [
-                'user_id'     => auth()->id(),
-                'recorded_at' => $hoy,
-            ],
-            [
-                'emotion'   => $request->emotion,
-                'intensity' => $request->intensity,
-                'notes'     => $request->notes,
-                'color'     => $this->colorEmocion($request->emotion),
-                'activity'  => $request->activity,
-            ]
-        );
-
-        return back()->with('success', '¡Emoción registrada! 💚');
+        return back()->with('success', 'Emoción registrada correctamente');
     }
 
-    private function calcularRacha(int $userId): array
+    private function generarInsights($registros, int $racha): array
     {
-        $registros = EmotionalRecord::where('user_id', $userId)
-            ->select('recorded_at')
-            ->orderByDesc('recorded_at')
-            ->get()
-            ->map(fn($r) => Carbon::parse($r->recorded_at)->startOfDay());
+        $insights = [];
 
-        $racha = 0;
-        $hoy = Carbon::today();
+        if ($registros->isEmpty()) {
+            return [['tipo' => 'info', 'mensaje' => 'Empieza a registrar tus emociones para ver insights personalizados. 💚']];
+        }
 
-        foreach ($registros as $i => $fecha) {
-            $esperada = $hoy->copy()->subDays($i);
-            if ($fecha->eq($esperada)) {
-                $racha++;
+        // Insight de racha
+        if ($racha >= 7) {
+            $insights[] = ['tipo' => 'logro', 'mensaje' => "¡Llevas {$racha} días seguidos registrando tus emociones! 🔥 Eso es compromiso de verdad."];
+        } elseif ($racha >= 3) {
+            $insights[] = ['tipo' => 'positivo', 'mensaje' => "Llevas {$racha} días seguidos. ¡Sigue así! 💪"];
+        }
+
+        // Insight de emoción más frecuente
+        $masFrec = $registros->groupBy('emotion')->sortByDesc(fn($g) => $g->count())->keys()->first();
+        $vecesFrec = $registros->where('emotion', $masFrec)->count();
+        $emojis = ['alegría' => '😊', 'calma' => '😌', 'ansiedad' => '😰', 'tristeza' => '😢', 'enfado' => '😠', 'cansancio' => '😴'];
+        $emoji = $emojis[$masFrec] ?? '💙';
+
+        if (in_array($masFrec, ['alegría', 'calma'])) {
+            $insights[] = ['tipo' => 'positivo', 'mensaje' => "Tu emoción más frecuente es {$emoji} {$masFrec}. ¡Estás en un buen momento!"];
+        } else {
+            $insights[] = ['tipo' => 'atencion', 'mensaje' => "Has sentido {$emoji} {$masFrec} {$vecesFrec} veces este mes. Hearty puede ayudarte a gestionarlo."];
+        }
+
+        // Insight de tendencia
+        $primera = $registros->take(10)->avg('intensity');
+        $ultima  = $registros->take(-10)->avg('intensity');
+
+        if ($primera && $ultima) {
+            if ($ultima < $primera - 1) {
+                $insights[] = ['tipo' => 'positivo', 'mensaje' => 'Tu intensidad emocional ha bajado en las últimas semanas. Las cosas están mejorando. 📈'];
+            } elseif ($ultima > $primera + 1) {
+                $insights[] = ['tipo' => 'atencion', 'mensaje' => 'Nota que tu intensidad emocional ha subido últimamente. ¿Hay algo que te está afectando más? 💙'];
             } else {
-                break;
+                $insights[] = ['tipo' => 'info', 'mensaje' => 'Tu estado emocional ha sido bastante estable este mes. La estabilidad es bienestar. 🌊'];
             }
         }
 
-        return [
-            'dias'     => $racha,
-            'mensaje'  => $this->mensajeRacha($racha),
-            'emoji'    => $racha >= 7 ? '🔥' : ($racha >= 3 ? '⭐' : '🌱'),
-        ];
+        // Insight de días sin registrar
+        $diasSinRegistrar = now()->diffInDays(
+            $registros->last()?->created_at ?? now()->subDays(30)
+        );
+
+        if ($diasSinRegistrar >= 3) {
+            $insights[] = ['tipo' => 'recordatorio', 'mensaje' => "Llevas {$diasSinRegistrar} días sin registrar. El autoconocimiento emocional requiere constancia. 📓"];
+        }
+
+        return array_slice($insights, 0, 4);
     }
 
-    private function mensajeRacha(int $dias): string
+    private function mejorDia($registros): string
     {
-        if ($dias === 0) return 'Empieza tu racha hoy';
-        if ($dias === 1) return '¡Primer día! Sigue así';
-        if ($dias < 7)  return "¡{$dias} días seguidos!";
-        if ($dias < 30) return "¡{$dias} días! Eres increíble";
-        return "¡{$dias} días! Eres un ejemplo";
+        if ($registros->isEmpty()) return 'Sin datos';
+
+        $porDia = $registros->groupBy(fn($r) => $r->created_at->locale('es')->dayName)
+            ->map(fn($g) => $g->avg('intensity'));
+
+        return $porDia->sortBy(fn($v) => $v)->keys()->first() ?? 'Sin datos';
     }
 
-    private function emocionMasFrecuente(int $userId): string
-    {
-        $result = EmotionalRecord::where('user_id', $userId)
-            ->select('emotion', DB::raw('count(*) as total'))
-            ->groupBy('emotion')
-            ->orderByDesc('total')
-            ->first();
-
-        return $result ? $result->emotion : 'Sin datos';
-    }
-
-    private function colorEmocion(string $emotion): string
+    private function emocionEmoji(string $emocion): string
     {
         return [
-            '😊 Alegría'    => '#FFD700',
-            '😌 Calma'      => '#4ECDC4',
-            '😰 Ansiedad'   => '#FF8C42',
-            '😢 Tristeza'   => '#6B9FD4',
-            '😠 Enfado'     => '#E63946',
-            '😴 Cansancio'  => '#9B8EC4',
-        ][$emotion] ?? '#4ECDC4';
+            'alegría'   => '😊',
+            'calma'     => '😌',
+            'ansiedad'  => '😰',
+            'tristeza'  => '😢',
+            'enfado'    => '😠',
+            'cansancio' => '😴',
+        ][$emocion] ?? '💙';
     }
 }
