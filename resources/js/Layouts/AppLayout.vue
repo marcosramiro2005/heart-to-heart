@@ -15,6 +15,7 @@ const navLinks = [
     { name: 'Comunidad',       href: '/comunidad' },
     { name: 'Mis logros',      href: '/logros' },
     { name: '¿Quiénes somos?', href: '/quienes-somos' },
+    { name: '🆘 SOS', href: '/sos' },
 ]
 
 const toggleDropdown = () => {
@@ -53,6 +54,12 @@ onUnmounted(() => document.removeEventListener('click', clickFuera))
 </script>
 
 <template>
+
+    <!-- Botón SOS flotante -->
+    <Link href="/sos" class="btn-sos-flotante" title="Modo emergencia emocional">
+    🆘
+    </Link>
+
     <div class="app-wrapper">
 
         <nav class="navbar">
@@ -387,5 +394,29 @@ onUnmounted(() => document.removeEventListener('click', clickFuera))
 @media (max-width: 900px) {
     .nav-links  { display: none; }
     .hamburger  { display: flex; }
+}
+
+.btn-sos-flotante {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 56px;
+    height: 56px;
+    background: #E63946;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    text-decoration: none;
+    box-shadow: 0 4px 16px rgba(230,57,70,0.4);
+    z-index: 99;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-sos-flotante:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 24px rgba(230,57,70,0.5);
 }
 </style>

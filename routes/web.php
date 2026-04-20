@@ -98,6 +98,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/relajacion-muscular', fn() => Inertia::render('Tecnicas/RelajacionMuscular'))->name('relajacion_muscular');
     Route::get('/musicoterapia',       fn() => Inertia::render('Tecnicas/Musicoterapia'))->name('musicoterapia');
     Route::get('/gratitud-visual',     fn() => Inertia::render('Tecnicas/GratitudVisual'))->name('gratitud_visual');
+    Route::get('/sos', fn() => Inertia::render('SOS/Index'))->name('sos');
 });
 
 require __DIR__.'/auth.php';
