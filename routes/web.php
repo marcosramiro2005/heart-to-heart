@@ -8,9 +8,14 @@ use App\Http\Controllers\EmotionalDashboardController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\AchievementController;
 use App\Http\Controllers\ResourceLibraryController;
+use App\Http\Controllers\ChallengeController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+
+Route::get('/mis-estadisticas', function () {
+    return Inertia::render('Stats/Index');
+})->middleware('auth')->name('stats');
 
 // ── Ruta raíz — Landing si no está logueado, home si sí ──
 Route::get('/', function () {
@@ -98,6 +103,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/relajacion-muscular', fn() => Inertia::render('Tecnicas/RelajacionMuscular'))->name('relajacion_muscular');
     Route::get('/musicoterapia',       fn() => Inertia::render('Tecnicas/Musicoterapia'))->name('musicoterapia');
     Route::get('/gratitud-visual',     fn() => Inertia::render('Tecnicas/GratitudVisual'))->name('gratitud_visual');
+    Route::get('/retos',                                   [ChallengeController::class, 'index'])->name('challenges.index');
+    Route::post('/retos/{challenge}/unirse',               [ChallengeController::class, 'unirse'])->name('challenges.join');
+    Route::post('/retos/{userChallenge}/completar-dia',    [ChallengeController::class, 'completarDia'])->name('challenges.complete');
+    Route::post('/retos/{userChallenge}/abandonar',        [ChallengeController::class, 'abandonar'])->name('challenges.abandon');
     Route::get('/sos', fn() => Inertia::render('SOS/Index'))->name('sos');
 });
 

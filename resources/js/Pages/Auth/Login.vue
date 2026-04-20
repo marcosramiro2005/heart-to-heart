@@ -246,4 +246,34 @@ form {
     font-size: 0.78rem;
     color: #E63946;
 }
+
+/* Fondo degradado como la landing */
+.login-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0fffe 0%, #e8f8f5 50%, #ffeef0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.login-card {
+    background: white;
+    border-radius: 24px;
+    padding: 2.5rem;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.login-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.login-logo img  { width: 40px; }
+.login-logo span { font-weight: 700; font-size: 0.88rem; color: #E63946; letter-spacing: 0.08em; }
 </style>
