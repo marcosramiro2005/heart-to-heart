@@ -151,3 +151,70 @@
     .navbar, footer, .btn-exportar, .input-area { display: none !important; }
     body { background: white; color: black; }
 }
+
+/* ── Transiciones de página Inertia ── */
+.page-enter-active {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.page-leave-active {
+    transition: opacity 0.15s ease;
+}
+
+.page-enter-from {
+    opacity: 0;
+    transform: translateY(6px);
+}
+
+.page-leave-to {
+    opacity: 0;
+}
+
+/* ── Loading bar de navegación ── */
+#nprogress .bar {
+    background: #4ECDC4 !important;
+    height: 3px !important;
+}
+
+#nprogress .peg {
+    box-shadow: 0 0 10px #4ECDC4, 0 0 5px #4ECDC4 !important;
+}
+
+/* ── Skeleton loading global ── */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s ease infinite;
+    border-radius: 8px;
+}
+
+@keyframes skeleton-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ── Animaciones globales ── */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in-up { animation: fadeInUp 0.4s ease forwards; }
+.animate-fade-in    { animation: fadeIn 0.3s ease forwards; }
+.animate-scale-in   { animation: scaleIn 0.3s ease forwards; }
+
+.delay-1 { animation-delay: 0.05s; }
+.delay-2 { animation-delay: 0.1s; }
+.delay-3 { animation-delay: 0.15s; }
+.delay-4 { animation-delay: 0.2s; }
+.delay-5 { animation-delay: 0.25s; }
