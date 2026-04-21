@@ -163,6 +163,8 @@ onUnmounted(() => {
                                 <button class="dd-item" @click="navegarA('/retos')">🎯 Mis retos</button>
                                 <button class="dd-item" @click="navegarA('/quienes-somos')">💚 ¿Quiénes somos?</button>
                                 <button class="dd-item" @click="navegarA('/test-bienestar')">🧠 Test de bienestar</button>
+                                <button class="dd-item" @click="navegarA('/mi-plan')">🌱 Mi plan semanal</button>
+                                <button class="dd-item" @click="navegarA('/focus')">🎯 Modo Focus</button>
                                 <div class="dd-divider"></div>
                                 <button class="dd-item dd-logout" @click="cerrarSesion">🚪 Cerrar sesión</button>
                             </div>

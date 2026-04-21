@@ -12,6 +12,7 @@ use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\WellnessTestController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\DiaryController;
+use App\Http\Controllers\WellnessPlanController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -116,6 +117,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/diario',              [DiaryController::class, 'index'])->name('diary.index');
     Route::post('/diario',             [DiaryController::class, 'guardar'])->name('diary.guardar');
     Route::delete('/diario/{diaryEntry}', [DiaryController::class, 'eliminar'])->name('diary.eliminar');
+    Route::get('/focus', fn() => Inertia::render('Focus/Index'))->middleware('auth')->name('focus');
+    Route::get('/mi-plan',                          [WellnessPlanController::class, 'index'])->name('plan.index');
+    Route::post('/mi-plan/generar',                 [WellnessPlanController::class, 'generar'])->name('plan.generar');
+    Route::post('/mi-plan/{wellnessPlan}/completar',[WellnessPlanController::class, 'completarDia'])->name('plan.completar');
     Route::get('/sos', fn() => Inertia::render('SOS/Index'))->name('sos');
 });
 
