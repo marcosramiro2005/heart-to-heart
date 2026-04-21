@@ -11,6 +11,7 @@ use App\Http\Controllers\ResourceLibraryController;
 use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\WellnessTestController;
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\DiaryController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -93,7 +94,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/respiracion',         fn() => Inertia::render('Tecnicas/Respiracion'))->name('respiracion');
     Route::get('/meditacion',          fn() => Inertia::render('Tecnicas/Meditacion'))->name('meditacion');
     Route::get('/sonidos',             fn() => Inertia::render('Tecnicas/Sonidos'))->name('sonidos');
-    Route::get('/diario',              fn() => Inertia::render('Tecnicas/Diario'))->name('diario');
     Route::get('/infusiones',          fn() => Inertia::render('Tecnicas/Infusiones'))->name('infusiones');
     Route::get('/ejercicio',           fn() => Inertia::render('Tecnicas/Ejercicio'))->name('ejercicio');
     Route::get('/tapping',             fn() => Inertia::render('Tecnicas/Tapping'))->name('tapping');
@@ -113,6 +113,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/test-bienestar/guardar',[WellnessTestController::class, 'guardar'])->middleware('auth')->name('wellness.guardar');
     Route::get('/onboarding',  [OnboardingController::class, 'index'])->name('onboarding');
     Route::post('/onboarding', [OnboardingController::class, 'completar'])->name('onboarding.completar');
+    Route::get('/diario',              [DiaryController::class, 'index'])->name('diary.index');
+    Route::post('/diario',             [DiaryController::class, 'guardar'])->name('diary.guardar');
+    Route::delete('/diario/{diaryEntry}', [DiaryController::class, 'eliminar'])->name('diary.eliminar');
     Route::get('/sos', fn() => Inertia::render('SOS/Index'))->name('sos');
 });
 
