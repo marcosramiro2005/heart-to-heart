@@ -1,159 +1,142 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import anthropic
 import random
-from hearty.preguntas import FLUJO_PREGUNTAS
-from hearty.respuestas import (
-    RESPUESTAS, PALABRAS_CLAVE, CONSEJOS_GENERALES,
-    FRASES_MOTIVACIONALES, NOMBRES_TECNICAS, RUTAS_TECNICAS
-)
+import os
+from hearty.respuestas import CONSEJOS_GENERALES, FRASES_MOTIVACIONALES
 
 app = Flask(__name__)
-CORS(app, origins=["http://127.0.0.1:8000", "http://localhost:8000",
-                   "http://192.168.1.40:8000", "http://0.0.0.0:8000"])
+CORS(app, origins=[
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+    "http://192.168.1.40:8000",
+])
 
+# ── Cliente Anthropic ──
+cliente = anthropic.Anthropic(
+    api_key=os.environ.get("ANTHROPIC_API_KEY", "")
+)
 
-def detectar_emocion_texto_libre(texto: str) -> dict | None:
-    texto_lower = texto.lower()
-    # Prioridad: crisis primero
-    for emocion in ["crisis", "ansiedad", "tristeza", "soledad", "cansancio",
-                    "enfado", "autoestima", "trabajo", "dormir", "pareja",
-                    "familia", "alegría", "calma"]:
-        if emocion not in PALABRAS_CLAVE:
-            continue
-        datos = PALABRAS_CLAVE[emocion]
-        for palabra in datos["palabras"]:
-            if palabra in texto_lower:
-                return {
-                    "emocion":    datos["emocion"],
-                    "intensidad": datos["intensidad"],
-                    "respuesta":  datos["respuesta"],
-                    "tecnicas":   datos.get("tecnicas", []),
-                    "es_crisis":  datos.get("es_crisis", False),
-                }
-    return None
+SYSTEM_PROMPT = """Eres Hearty, el asistente emocional de Heart to Heart, una aplicación de bienestar mental.
 
+Tu personalidad:
+- Eres cálido, empático y genuinamente comprensivo
+- Hablas en español, de forma natural y cercana, nunca robótica
+- Usas "tú" para dirigirte al usuario
+- Eres directo pero amable, nunca condescendiente
+- Usas emojis con moderación (1-2 por mensaje máximo)
 
-def respuesta_generica(historial: list) -> str:
-    sesiones = len(historial) if historial else 0
-    if sesiones >= 5:
-        return f"Llevamos {sesiones} conversaciones juntos 💚 Confío en que puedo ayudarte. Cuéntame más sobre cómo te sientes."
-    elif sesiones >= 2:
-        return "Ya nos conocemos un poco 😊 Puedes contarme lo que necesites con total confianza. ¿Qué te ronda por la cabeza?"
-    return "Gracias por compartir eso conmigo 💙 ¿Hay algo más que quieras contarme? Estoy aquí para escucharte."
+Tu función:
+- Escuchar activamente y validar las emociones del usuario
+- Hacer preguntas que ayuden a profundizar y reflexionar
+- Sugerir técnicas de bienestar cuando sea apropiado
+- Detectar señales de crisis y responder con recursos reales
+- Recordar el contexto de la conversación
 
+Técnicas disponibles en la app que puedes recomendar:
+- Respiración guiada (/respiracion) — para ansiedad inmediata
+- Meditación (/meditacion) — para calmar la mente
+- Sonidos relajantes (/sonidos) — para el ambiente
+- Diario de gratitud (/diario) — para cambiar perspectiva
+- EFT Tapping (/tapping) — para liberar estrés
+- Visualización guiada (/visualizacion) — para relajación profunda
+- Yoga suave (/yoga) — para liberar tensión corporal
+- Journaling (/journaling) — para procesar emociones
+- Grounding 5-4-3-2-1 (/tecnica-5-4-3-2-1) — para ataques de pánico
+- Relajación muscular (/relajacion-muscular) — para tensión física
+- Musicoterapia (/musicoterapia) — para regular emociones
+- Ejercicio terapéutico (/ejercicio) — para liberar endorfinas
 
-def construir_respuesta(mensaje: str, historial: list) -> dict:
-    respuesta_data = RESPUESTAS.get(mensaje)
-    es_crisis = False
+Reglas importantes:
+1. NUNCA digas que eres una IA o un chatbot. Eres Hearty.
+2. Si el usuario menciona pensamientos de hacerse daño, responde con mucha empatía y proporciona el número 024 (España) de forma natural.
+3. Tus respuestas deben tener entre 2-4 párrafos. Nunca muy cortas ni muy largas.
+4. Cuando sugieras una técnica, explica brevemente por qué esa técnica ayuda para lo que siente el usuario.
+5. Termina siempre con una pregunta abierta o una invitación a continuar.
+6. Si el contexto incluye historial emocional del usuario, úsalo para personalizar tu respuesta.
+"""
 
-    if not respuesta_data:
-        deteccion = detectar_emocion_texto_libre(mensaje)
-        if deteccion:
-            es_crisis = deteccion.get("es_crisis", False)
-            respuesta_data = {
-                "respuesta":         deteccion["respuesta"],
-                "tecnicas":          deteccion["tecnicas"],
-                "emocion_detectada": deteccion["emocion"],
-                "intensidad":        deteccion["intensidad"],
-                "es_crisis":         es_crisis,
-            }
+def construir_mensajes_sistema(historial_emocional: list, sesiones: int, nombre: str) -> str:
+    contexto = SYSTEM_PROMPT
 
-    if not respuesta_data:
-        respuesta_data = {
-            "respuesta":         respuesta_generica(historial),
-            "tecnicas":          [],
-            "emocion_detectada": None,
-            "intensidad":        None,
-        }
+    if nombre:
+        contexto += f"\n\nEl nombre del usuario es {nombre}."
 
-    respuesta_texto = respuesta_data.get("respuesta", "")
+    if sesiones > 0:
+        contexto += f"\n\nEsta es la sesión número {sesiones + 1} del usuario con Hearty."
 
-    # Personalizar con historial si no es crisis
-    if historial and not es_crisis:
-        emocion_anterior = historial[-1].get("emocion") if historial else None
-        emocion_actual   = respuesta_data.get("emocion_detectada")
-        if emocion_anterior and emocion_actual and emocion_anterior != emocion_actual:
-            if emocion_actual in ["alegría", "calma"] and emocion_anterior in ["ansiedad", "tristeza", "enfado"]:
-                respuesta_texto = "Noto que estás mejor que la última vez que hablamos 😊 Eso me alegra mucho. " + respuesta_texto
-            elif emocion_actual in ["ansiedad", "tristeza"] and emocion_anterior in ["alegría", "calma"]:
-                respuesta_texto = "Parece que las cosas han cambiado desde la última vez 💙 Estoy aquí. " + respuesta_texto
+    if historial_emocional:
+        ultimas = historial_emocional[-5:]
+        resumen = ", ".join([f"{h.get('emocion', 'desconocida')} (intensidad {h.get('intensidad', '?')})" for h in ultimas])
+        contexto += f"\n\nHistorial emocional reciente del usuario: {resumen}."
 
-    tecnicas_ids = respuesta_data.get("tecnicas", [])
-    tecnicas_formateadas = [
-        {
-            "id":     t,
-            "nombre": NOMBRES_TECNICAS.get(t, t),
-            "ruta":   RUTAS_TECNICAS.get(t, "/")
-        }
-        for t in tecnicas_ids
-    ]
+        emociones = [h.get('emocion') for h in historial_emocional if h.get('emocion')]
+        if emociones:
+            from collections import Counter
+            predominante = Counter(emociones).most_common(1)[0][0]
+            contexto += f" Su emoción predominante ha sido {predominante}."
 
-    frase = None
-    if not es_crisis:
-        frase = respuesta_data.get("frase_motivacional") or random.choice(FRASES_MOTIVACIONALES)
-
-    return {
-        "respuesta":          respuesta_texto,
-        "tecnicas":           tecnicas_formateadas,
-        "emocion_detectada":  respuesta_data.get("emocion_detectada"),
-        "intensidad":         respuesta_data.get("intensidad"),
-        "consejo":            random.choice(CONSEJOS_GENERALES) if tecnicas_ids and not es_crisis else None,
-        "frase_motivacional": frase,
-        "accion":             respuesta_data.get("accion"),
-        "es_crisis":          es_crisis,
-    }
-
-
-def bienvenida_personalizada(historial: list, sesiones: int, nombre: str = None) -> str:
-    saludo = f"¡Hola{', ' + nombre if nombre else ''}!"
-
-    if sesiones == 0 or not historial:
-        return f"{saludo} Soy Hearty, tu guía emocional 💚 Estoy aquí para acompañarte en cualquier momento. ¿Cómo te sientes hoy?"
-
-    ultima_emocion = historial[-1].get("emocion") if historial else None
-
-    if sesiones == 1:
-        base = f"{saludo} ¡Qué bueno verte de nuevo! 😊"
-    elif sesiones < 5:
-        base = f"{saludo} Ya llevamos {sesiones} conversaciones juntos 💚"
-    elif sesiones < 10:
-        base = f"{saludo} ¡{sesiones} conversaciones ya! 🌟 Eres un ejemplo de cuidado personal."
-    else:
-        base = f"{saludo} ¡{sesiones} conversaciones! 🏆 Es un honor acompañarte en este camino."
-
-    endings = {
-        "ansiedad":  " La última vez te sentías algo ansioso/a. ¿Cómo estás hoy?",
-        "tristeza":  " La última vez estabas pasando un momento difícil 💙 Espero que hoy esté mejor. ¿Cómo te encuentras?",
-        "alegría":   " La última vez estabas de buen humor 😊 ¿Sigues igual de bien?",
-        "calma":     " La última vez te sentías tranquilo/a. ¿Has podido mantener esa calma?",
-        "cansancio": " La última vez estabas bastante cansado/a. ¿Has podido descansar?",
-        "enfado":    " La última vez estabas pasando un momento difícil. ¿Cómo estás ahora?",
-    }
-
-    base += endings.get(ultima_emocion, " ¿Cómo te sientes hoy?")
-    return base
+    return contexto
 
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({"status": "ok", "chatbot": "Hearty Pro Max activo 💚"})
+    tiene_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
+    return jsonify({
+        "status": "ok",
+        "chatbot": "Hearty Ultra Pro 💚",
+        "claude_api": "conectada" if tiene_key else "sin clave API"
+    })
 
 
 @app.route('/inicio', methods=['GET'])
 def inicio():
     historial_str = request.args.get('historial', '')
     sesiones      = int(request.args.get('sesiones', 0))
-    nombre        = request.args.get('nombre', None)
+    nombre        = request.args.get('nombre', '')
 
     historial = [{"emocion": e} for e in historial_str.split(',') if e]
 
-    mensaje          = bienvenida_personalizada(historial, sesiones, nombre)
-    primera_pregunta = FLUJO_PREGUNTAS[0]
+    # Generar bienvenida con Claude
+    try:
+        if not os.environ.get("ANTHROPIC_API_KEY"):
+            raise Exception("Sin API key")
+
+        prompt_bienvenida = f"El usuario se llama {nombre or 'amigo/a'}. "
+        if sesiones == 0:
+            prompt_bienvenida += "Es la primera vez que usa la app. Salúdale con calidez y pregúntale cómo se siente hoy."
+        elif sesiones < 5:
+            prompt_bienvenida += f"Ha usado la app {sesiones} veces antes. Salúdale de vuelta con familiaridad."
+        else:
+            prompt_bienvenida += f"Es un usuario frecuente con {sesiones} sesiones. Reconoce su constancia."
+
+        if historial:
+            ultima = historial[-1].get('emocion')
+            if ultima:
+                prompt_bienvenida += f" La última vez se sintió {ultima}."
+
+        prompt_bienvenida += " El saludo debe ser breve, de 2-3 frases máximo."
+
+        mensaje = cliente.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=200,
+            system=construir_mensajes_sistema(historial, sesiones, nombre),
+            messages=[{"role": "user", "content": prompt_bienvenida}]
+        )
+
+        texto = mensaje.content[0].text
+
+    except Exception as e:
+        # Fallback si no hay API key
+        if sesiones == 0:
+            texto = f"¡Hola{', ' + nombre if nombre else ''}! Soy Hearty 💚 Estoy aquí para acompañarte. ¿Cómo te sientes hoy?"
+        else:
+            texto = f"¡Hola de nuevo{', ' + nombre if nombre else ''}! Me alegra que hayas vuelto 😊 ¿Cómo estás hoy?"
 
     return jsonify({
-        "mensaje":     mensaje,
-        "opciones":    primera_pregunta["opciones"],
-        "pregunta_id": primera_pregunta["id"],
+        "mensaje":     texto,
+        "opciones":    ["😊 Bien", "😌 Tranquilo/a", "😰 Ansioso/a", "😢 Triste", "😠 Enfadado/a", "😴 Cansado/a"],
+        "pregunta_id": "bienvenida",
         "sesiones":    sesiones,
     })
 
@@ -164,44 +147,121 @@ def chat():
     if not data or "mensaje" not in data:
         return jsonify({"error": "Mensaje requerido"}), 400
 
-    mensaje        = data.get("mensaje", "").strip()
-    pregunta_actual = data.get("pregunta_actual", "bienvenida")
-    historial      = data.get("historial", [])
+    mensaje         = data.get("mensaje", "").strip()
+    historial_chat  = data.get("historial_chat", [])
+    historial_emoc  = data.get("historial_emocional", [])
+    nombre          = data.get("nombre", "")
+    sesiones        = data.get("sesiones", 0)
 
-    respuesta = construir_respuesta(mensaje, historial)
+    try:
+        if not os.environ.get("ANTHROPIC_API_KEY"):
+            raise Exception("Sin API key")
 
-    # Siguiente pregunta del flujo
-    siguiente = None
-    for i, p in enumerate(FLUJO_PREGUNTAS):
-        if p["id"] == pregunta_actual and i + 1 < len(FLUJO_PREGUNTAS):
-            sig = FLUJO_PREGUNTAS[i + 1]
-            siguiente = {
-                "mensaje":     sig["mensaje"],
-                "opciones":    sig["opciones"],
-                "pregunta_id": sig["id"]
-            }
-            break
+        # Construir historial de mensajes para Claude
+        mensajes_claude = []
+        for msg in historial_chat[-10:]:  # últimos 10 mensajes
+            rol = "user" if msg.get("sender") == "user" else "assistant"
+            mensajes_claude.append({
+                "role":    rol,
+                "content": msg.get("texto", "")
+            })
 
-    return jsonify({
-        "respuesta":          respuesta["respuesta"],
-        "tecnicas_sugeridas": respuesta["tecnicas"],
-        "consejo_del_dia":    respuesta["consejo"],
-        "frase_motivacional": respuesta["frase_motivacional"],
-        "emocion_detectada":  respuesta["emocion_detectada"],
-        "intensidad":         respuesta["intensidad"],
-        "accion":             respuesta["accion"],
-        "es_crisis":          respuesta["es_crisis"],
-        "siguiente_pregunta": siguiente,
-    })
+        # Añadir mensaje actual
+        mensajes_claude.append({
+            "role":    "user",
+            "content": mensaje
+        })
+
+        respuesta = cliente.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=600,
+            system=construir_mensajes_sistema(historial_emoc, sesiones, nombre),
+            messages=mensajes_claude
+        )
+
+        texto = respuesta.content[0].text
+
+        # Detectar si hay crisis en el mensaje
+        palabras_crisis = ["suicidio", "morir", "hacerme daño", "no quiero vivir", "quitarme la vida"]
+        es_crisis = any(p in mensaje.lower() for p in palabras_crisis)
+
+        # Detectar técnicas mencionadas en la respuesta
+        tecnicas_detectadas = []
+        mapa_tecnicas = {
+            "/respiracion":        ("🫁 Respiración guiada",   "/respiracion"),
+            "/meditacion":         ("🧘 Meditación",            "/meditacion"),
+            "/sonidos":            ("🎵 Sonidos relajantes",    "/sonidos"),
+            "/diario":             ("📓 Diario de gratitud",    "/diario"),
+            "/tapping":            ("👆 EFT Tapping",           "/tapping"),
+            "/visualizacion":      ("🌈 Visualización guiada",  "/visualizacion"),
+            "/yoga":               ("🤸 Yoga suave",            "/yoga"),
+            "/journaling":         ("📝 Journaling",            "/journaling"),
+            "/tecnica-5-4-3-2-1":  ("🌍 Grounding 5-4-3-2-1",  "/tecnica-5-4-3-2-1"),
+            "/relajacion-muscular":("💆 Relajación muscular",   "/relajacion-muscular"),
+            "/ejercicio":          ("🏃 Ejercicio terapéutico", "/ejercicio"),
+        }
+
+        for ruta, (nombre_tec, ruta_tec) in mapa_tecnicas.items():
+            if ruta in texto:
+                tecnicas_detectadas.append({
+                    "id":     ruta.strip("/"),
+                    "nombre": nombre_tec,
+                    "ruta":   ruta_tec
+                })
+
+        return jsonify({
+            "respuesta":          texto,
+            "tecnicas_sugeridas": tecnicas_detectadas,
+            "emocion_detectada":  None,
+            "intensidad":         None,
+            "es_crisis":          es_crisis,
+            "frase_motivacional": random.choice(FRASES_MOTIVACIONALES) if not es_crisis else None,
+            "consejo_del_dia":    random.choice(CONSEJOS_GENERALES) if not es_crisis else None,
+        })
+
+    except Exception as e:
+        # Fallback sin API key
+        return jsonify({
+            "respuesta": _respuesta_fallback(mensaje),
+            "tecnicas_sugeridas": [],
+            "emocion_detectada":  None,
+            "es_crisis":          False,
+            "frase_motivacional": random.choice(FRASES_MOTIVACIONALES),
+        })
+
+
+def _respuesta_fallback(mensaje: str) -> str:
+    mensaje_lower = mensaje.lower()
+    if any(p in mensaje_lower for p in ["ansios", "angustia", "pánico", "nervios"]):
+        return "Noto que estás pasando por un momento de ansiedad 💙 Vamos a trabajar juntos. Prueba ahora mismo la respiración 4-7-8: inspira 4 segundos, mantén 4 y suelta en 6. ¿Puedes contarme qué está generando esa ansiedad?"
+    elif any(p in mensaje_lower for p in ["triste", "llorar", "mal", "fatal", "depri"]):
+        return "Gracias por contarme cómo te sientes 💙 La tristeza es válida y merece ser escuchada. No tienes que estar solo/a con esto. ¿Quieres contarme qué ha pasado, o prefieres que te sugiera algo que pueda ayudarte ahora mismo?"
+    elif any(p in mensaje_lower for p in ["bien", "genial", "feliz", "contento"]):
+        return "¡Me alegra mucho escucharlo! 😊 Ese estado positivo es valioso. ¿Quieres aprovechar este buen momento para practicar algo que te ayude a mantenerlo?"
+    elif any(p in mensaje_lower for p in ["cansad", "agotad", "sin energía"]):
+        return "El cansancio es una señal importante 😴 Tu cuerpo y mente necesitan recuperarse. ¿Es cansancio físico, mental o emocional? Cada tipo necesita un descanso diferente."
+    else:
+        return "Gracias por compartir eso conmigo 💙 Estoy aquí para escucharte. ¿Hay algo más que quieras contarme sobre cómo te sientes?"
 
 
 @app.route('/analizar', methods=['POST'])
 def analizar():
-    data   = request.get_json()
-    texto  = data.get("texto", "")
-    result = detectar_emocion_texto_libre(texto)
-    if result:
-        return jsonify({"emocion": result["emocion"], "intensidad": result["intensidad"], "detectado": True})
+    data  = request.get_json()
+    texto = data.get("texto", "")
+
+    palabras = {
+        "ansiedad":  ["ansios", "angustia", "pánico", "nervios", "agobiad"],
+        "tristeza":  ["triste", "llorar", "depri", "fatal", "mal", "vacío"],
+        "alegría":   ["bien", "genial", "feliz", "contento", "alegre"],
+        "cansancio": ["cansad", "agotad", "sin energía", "exhausto"],
+        "enfado":    ["enfadad", "furioso", "rabia", "frustrad", "harto"],
+    }
+
+    texto_lower = texto.lower()
+    for emocion, terminos in palabras.items():
+        if any(t in texto_lower for t in terminos):
+            return jsonify({"detectado": True, "emocion": emocion})
+
     return jsonify({"detectado": False})
 
 
@@ -210,10 +270,10 @@ def consejo():
     return jsonify({"consejo": random.choice(CONSEJOS_GENERALES)})
 
 
-@app.route('/frase', methods=['GET'])
-def frase():
-    return jsonify({"frase": random.choice(FRASES_MOTIVACIONALES)})
-
-
 if __name__ == '__main__':
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if api_key:
+        print("✅ Claude API conectada — Hearty Ultra Pro activo")
+    else:
+        print("⚠️  Sin ANTHROPIC_API_KEY — usando modo fallback")
     app.run(host='0.0.0.0', port=5000, debug=True)
