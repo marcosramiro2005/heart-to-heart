@@ -10,6 +10,7 @@ use App\Http\Controllers\AchievementController;
 use App\Http\Controllers\ResourceLibraryController;
 use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\WellnessTestController;
+use App\Http\Controllers\OnboardingController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -110,6 +111,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/retos/{userChallenge}/abandonar',        [ChallengeController::class, 'abandonar'])->name('challenges.abandon');
     Route::get('/test-bienestar',         [WellnessTestController::class, 'index'])->middleware('auth')->name('wellness.index');
     Route::post('/test-bienestar/guardar',[WellnessTestController::class, 'guardar'])->middleware('auth')->name('wellness.guardar');
+    Route::get('/onboarding',  [OnboardingController::class, 'index'])->name('onboarding');
+    Route::post('/onboarding', [OnboardingController::class, 'completar'])->name('onboarding.completar');
     Route::get('/sos', fn() => Inertia::render('SOS/Index'))->name('sos');
 });
 

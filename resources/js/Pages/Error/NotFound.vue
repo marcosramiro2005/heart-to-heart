@@ -3,99 +3,88 @@ import { Link } from '@inertiajs/vue3'
 </script>
 
 <template>
-    <div class="error-wrapper">
+    <div class="error-page">
+        <div class="error-bg">
+            <div class="eb-circle c1"></div>
+            <div class="eb-circle c2"></div>
+        </div>
         <div class="error-card">
-            <div class="error-emoji">💔</div>
-            <h1>404</h1>
-            <h2>Página no encontrada</h2>
-            <p>La página que buscas no existe o ha sido movida.</p>
-            <div class="error-acciones">
-                <Link href="/home" class="btn-home">🏠 Ir al inicio</Link>
-                <Link href="/hearty" class="btn-hearty">💬 Hablar con Hearty</Link>
+            <div class="ec-logo">
+                <img src="/images/logo.png" alt="Heart to Heart" />
+                <span>HEART TO HEART</span>
             </div>
+            <div class="ec-num">404</div>
+            <h1>Página no encontrada</h1>
+            <p>La página que buscas no existe o ha sido movida. No te preocupes, volvemos al inicio.</p>
+            <Link href="/home" class="btn-volver">
+                💚 Volver al inicio
+            </Link>
         </div>
     </div>
 </template>
 
 <style scoped>
-.error-wrapper {
+.error-page {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--color-bg);
-    padding: 2rem;
+    background: linear-gradient(135deg, #f0fffe, #e8f8f5, #ffeef0);
+    position: relative;
+    overflow: hidden;
 }
 
+.error-bg { position: absolute; inset: 0; pointer-events: none; }
+.eb-circle { position: absolute; border-radius: 50%; opacity: 0.1; }
+.eb-circle.c1 { width: 400px; height: 400px; background: #4ECDC4; top: -100px; right: -80px; }
+.eb-circle.c2 { width: 300px; height: 300px; background: #E63946; bottom: -80px; left: -60px; }
+
 .error-card {
-    text-align: center;
-    background: var(--color-bg-card);
-    border-radius: 20px;
+    background: white;
+    border-radius: 24px;
     padding: 3rem 2.5rem;
-    border: 1px solid var(--color-border);
-    max-width: 420px;
+    max-width: 440px;
     width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1rem;
 }
 
-.error-emoji { font-size: 4rem; }
+.ec-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
 
-h1 {
-    font-size: 4rem;
+.ec-logo img  { width: 32px; }
+.ec-logo span { font-weight: 700; font-size: 0.8rem; color: #E63946; letter-spacing: 0.08em; }
+
+.ec-num {
+    font-size: 5rem;
     font-weight: 900;
-    color: var(--color-primary);
-    margin: 0;
+    color: #4ECDC4;
+    opacity: 0.3;
     line-height: 1;
 }
 
-h2 {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--color-text);
-    margin: 0;
-}
+.error-card h1 { font-size: 1.5rem; font-weight: 800; color: #2D2D2D; margin: 0; }
+.error-card p  { font-size: 0.95rem; color: #666; line-height: 1.6; margin: 0; max-width: 340px; }
 
-p {
-    color: var(--color-text-muted);
-    font-size: 0.95rem;
-    margin: 0;
-}
-
-.error-acciones {
-    display: flex;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-.btn-home {
-    padding: 0.75rem 1.5rem;
-    background: var(--color-primary);
+.btn-volver {
+    padding: 0.9rem 2rem;
+    background: #4ECDC4;
     color: white;
+    font-weight: 700;
     border-radius: 25px;
     text-decoration: none;
-    font-weight: 700;
-    transition: background 0.2s;
+    transition: background 0.2s, transform 0.2s;
+    margin-top: 0.5rem;
 }
 
-.btn-home:hover { background: var(--color-primary-dark); }
-
-.btn-hearty {
-    padding: 0.75rem 1.5rem;
-    background: var(--color-bg-secondary);
-    color: var(--color-primary);
-    border-radius: 25px;
-    text-decoration: none;
-    font-weight: 700;
-    border: 2px solid var(--color-primary);
-    transition: background 0.2s;
-}
-
-.btn-hearty:hover {
-    background: var(--color-primary-light);
-}
+.btn-volver:hover { background: #3BAFA7; transform: translateY(-2px); }
 </style>

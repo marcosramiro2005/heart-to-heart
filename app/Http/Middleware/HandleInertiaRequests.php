@@ -27,7 +27,7 @@ class HandleInertiaRequests extends Middleware
      *
      * @return array<string, mixed>
      */
-   public function share(Request $request): array
+  public function share(Request $request): array
 {
     return [
         ...parent::share($request),
@@ -44,8 +44,10 @@ class HandleInertiaRequests extends Middleware
             'error'   => session('error'),
             'info'    => session('info'),
         ],
+        'onboarding_pendiente' => $request->user() && !$request->user()->onboarding_completado,
     ];
 }
+
 
 }
 

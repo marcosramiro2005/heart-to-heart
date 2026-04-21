@@ -1,8 +1,17 @@
 <script setup>
 import { Link, router, usePage } from '@inertiajs/vue3'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import AchievementToast from '@/Components/AchievementToast.vue'
 import AppFooter from '@/Components/AppFooter.vue'
+
+const flashVisible = ref(false)
+
+watch(() => usePage().props.flash?.success, (val) => {
+    if (val) {
+        flashVisible.value = true
+        setTimeout(() => { flashVisible.value = false }, 3000)
+    }
+}, { immediate: true })
 
 const page              = usePage()
 const dropdownAbierto   = ref(false)
@@ -194,6 +203,18 @@ onUnmounted(() => {
         <main>
             <slot />
         </main>
+
+        <Transition name="flash">
+    <div v-if="flashVisible && $page.props.flash?.success" class="flash-msg flash-success">
+        ✅ {{ $page.props.flash.success }}
+    </div>
+</Transition>
+
+<Transition name="flash">
+    <div v-if="$page.props.flash?.error" class="flash-msg flash-error">
+        ⚠️ {{ $page.props.flash.error }}
+    </div>
+</Transition>
 
         <AppFooter />
         <AchievementToast />
@@ -566,4 +587,38 @@ onUnmounted(() => {
 }
 
 main { outline: none; min-height: calc(100vh - 60px); }
+
+/* ── Flash messages ── */
+.flash-msg {
+    position: fixed;
+    bottom: 5.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.85rem 1.75rem;
+    border-radius: 25px;
+    font-weight: 700;
+    font-size: 0.92rem;
+    z-index: 800;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    white-space: nowrap;
+}
+
+.flash-success {
+    background: #4ECDC4;
+    color: white;
+}
+
+.flash-error {
+    background: #E63946;
+    color: white;
+}
+
+.flash-enter-active, .flash-leave-active {
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.flash-enter-from, .flash-leave-to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+}
 </style>

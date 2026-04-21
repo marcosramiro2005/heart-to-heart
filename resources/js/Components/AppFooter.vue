@@ -1,256 +1,167 @@
 <script setup>
 import { Link } from '@inertiajs/vue3'
-
-const anioActual = new Date().getFullYear()
-
-const secciones = [
-    {
-        titulo: 'Explorar',
-        links: [
-            { label: 'Inicio',        href: '/home' },
-            { label: 'Mis emociones', href: '/mis-emociones' },
-            { label: 'Biblioteca',    href: '/biblioteca' },
-            { label: 'Recursos',      href: '/recursos' },
-            { label: 'Comunidad',     href: '/comunidad' },
-        ]
-    },
-    {
-        titulo: 'Herramientas',
-        links: [
-            { label: 'Hablar con Hearty',  href: '/hearty' },
-            { label: 'Respiración guiada', href: '/respiracion' },
-            { label: 'Sonidos relajantes', href: '/sonidos' },
-            { label: 'Diario de gratitud', href: '/diario' },
-            { label: 'Mis logros',         href: '/logros' },
-        ]
-    },
-    {
-        titulo: 'Información',
-        links: [
-            { label: '¿Quiénes somos?', href: '/quienes-somos' },
-            { label: 'Mi perfil',       href: '/perfil' },
-            { label: 'Biblioteca',      href: '/biblioteca' },
-        ]
-    },
-]
 </script>
 
 <template>
     <footer class="footer">
         <div class="footer-inner">
 
-            <div class="footer-marca">
-                <div class="footer-logo">
+            <div class="footer-brand">
+                <div class="fb-logo">
                     <img src="/images/logo.png" alt="Heart to Heart" />
                     <span>HEART TO HEART</span>
                 </div>
-
-                <p class="footer-tagline">
-                    Un espacio seguro para cuidar tu bienestar emocional cada día.
-                    Gratuito, accesible y hecho con amor.
-                </p>
-
-                <div class="footer-redes">
-                    <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="red-btn" title="GitHub">🐙</a>
-                    <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="red-btn" title="Instagram">📸</a>
-                    <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" class="red-btn" title="Twitter">🐦</a>
-                </div>
-
-                <div class="footer-aviso">
-                    <span class="aviso-icono">⚠️</span>
-                    <p>
-                        Heart to Heart es una herramienta de apoyo y
-                        <strong>no sustituye a la atención psicológica profesional</strong>.
-                        Si necesitas ayuda urgente, llama al
-                        <strong>024</strong> (línea de atención a conducta suicida).
-                    </p>
+                <p>Tu espacio seguro de bienestar emocional. Gratuito, privado y siempre disponible.</p>
+                <div class="fb-aviso">
+                    ⚠️ No sustituye atención psicológica profesional.
+                    En crisis llama al <strong>024</strong> o <strong>112</strong>.
                 </div>
             </div>
 
-            <div v-for="seccion in secciones" :key="seccion.titulo" class="footer-col">
-                <h4>{{ seccion.titulo }}</h4>
-                <ul>
-                    <li v-for="link in seccion.links" :key="link.label">
-                        <Link :href="link.href">{{ link.label }}</Link>
-                    </li>
-                </ul>
+            <div class="footer-links">
+                <div class="fl-col">
+                    <h4>Técnicas</h4>
+                    <Link href="/respiracion">Respiración guiada</Link>
+                    <Link href="/meditacion">Meditación</Link>
+                    <Link href="/visualizacion">Visualización</Link>
+                    <Link href="/ejercicio">Ejercicio</Link>
+                    <Link href="/sonidos">Sonidos</Link>
+                </div>
+                <div class="fl-col">
+                    <h4>App</h4>
+                    <Link href="/home">Inicio</Link>
+                    <Link href="/hearty">Hearty</Link>
+                    <Link href="/mis-emociones">Mis emociones</Link>
+                    <Link href="/comunidad">Comunidad</Link>
+                    <Link href="/retos">Retos</Link>
+                </div>
+                <div class="fl-col">
+                    <h4>Más</h4>
+                    <Link href="/logros">Mis logros</Link>
+                    <Link href="/biblioteca">Biblioteca</Link>
+                    <Link href="/test-bienestar">Test bienestar</Link>
+                    <Link href="/quienes-somos">¿Quiénes somos?</Link>
+                    <Link href="/sos">Modo SOS</Link>
+                </div>
             </div>
 
         </div>
 
         <div class="footer-bottom">
-            <div class="footer-bottom-inner">
-                <p>© {{ anioActual }} Heart to Heart · Desarrollado por Marcos Ramiro Roig</p>
-                <p>TFG — Ciclo Superior DAW · CPIFP Los Enlaces, Zaragoza</p>
-            </div>
+            <p>© {{ new Date().getFullYear() }} Heart to Heart · TFG DAW · Marcos Ramiro Roig · CPIFP Los Enlaces, Zaragoza</p>
+            <p>Desarrollado con 💚 usando Laravel, Vue 3, Inertia.js y Python/Flask</p>
         </div>
     </footer>
 </template>
 
 <style scoped>
 .footer {
-    background: #1a1a2e;
-    color: #e0e0e0;
-    margin-top: 4rem;
+    background: #141420;
+    margin-top: 3rem;
 }
 
 .footer-inner {
-    max-width: 1100px;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 3rem 1.5rem 2rem;
+    padding: 3rem 2rem;
     display: grid;
-    grid-template-columns: 1.5fr 1fr 1fr 1fr;
-    gap: 2.5rem;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 2rem;
 }
 
-.footer-marca {
+/* ── Brand ── */
+.footer-brand {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
-.footer-logo {
+.fb-logo {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-}
-
-.footer-logo img {
-    width: 38px;
-    height: auto;
-    filter: brightness(1.1);
-}
-
-.footer-logo span {
-    font-weight: 700;
-    font-size: 0.88rem;
-    color: #4ECDC4;
-    letter-spacing: 0.08em;
-}
-
-.footer-tagline {
-    font-size: 0.85rem;
-    color: #aaa;
-    line-height: 1.7;
-    margin: 0;
-}
-
-.footer-redes {
-    display: flex;
     gap: 0.5rem;
 }
 
-.red-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #2a2a3e;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    text-decoration: none;
-    transition: background 0.2s, transform 0.2s;
-    border: 1px solid #333;
-}
+.fb-logo img  { width: 32px; filter: brightness(1.2); }
+.fb-logo span { font-weight: 700; font-size: 0.82rem; color: #4ECDC4; letter-spacing: 0.1em; }
 
-.red-btn:hover {
-    background: #4ECDC4;
-    transform: translateY(-2px);
-}
-
-.footer-aviso {
-    display: flex;
-    gap: 0.6rem;
-    align-items: flex-start;
-    background: #2a1a1a;
-    border: 1px solid #5a2020;
-    border-radius: 10px;
-    padding: 0.75rem;
-}
-
-.aviso-icono {
-    font-size: 1rem;
-    flex-shrink: 0;
-    margin-top: 0.1rem;
-}
-
-.footer-aviso p {
-    font-size: 0.78rem;
-    color: #cc9999;
-    line-height: 1.5;
-    margin: 0;
-}
-
-.footer-aviso strong { color: #e0aaaa; }
-
-.footer-col h4 {
+.footer-brand p {
     font-size: 0.82rem;
-    font-weight: 700;
-    color: #4ECDC4;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin: 0 0 1rem;
+    color: #555;
+    line-height: 1.6;
+    margin: 0;
 }
 
-.footer-col ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+.fb-aviso {
+    font-size: 0.75rem;
+    color: #444;
+    line-height: 1.5;
+    background: rgba(230,57,70,0.08);
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    border-left: 2px solid #E63946;
+}
+
+.fb-aviso strong { color: #E63946; }
+
+/* ── Links ── */
+.footer-links {
+    display: contents;
+}
+
+.fl-col {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
 }
 
-.footer-col a {
-    font-size: 0.85rem;
-    color: #aaa;
+.fl-col h4 {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0 0 0.25rem;
+}
+
+.fl-col a {
+    font-size: 0.82rem;
+    color: #444;
     text-decoration: none;
     transition: color 0.2s;
-    display: inline-block;
 }
 
-.footer-col a:hover { color: #4ECDC4; }
+.fl-col a:hover { color: #4ECDC4; }
 
+/* ── Bottom ── */
 .footer-bottom {
-    border-top: 1px solid #2a2a3e;
-    background: #141420;
-}
-
-.footer-bottom-inner {
-    max-width: 1100px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding: 1.25rem 2rem;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 1rem 1.5rem;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.25rem;
 }
 
 .footer-bottom p {
-    font-size: 0.78rem;
-    color: #666;
+    font-size: 0.72rem;
+    color: #333;
     margin: 0;
+    text-align: center;
 }
 
+/* ── Responsive ── */
 @media (max-width: 900px) {
     .footer-inner {
         grid-template-columns: 1fr 1fr;
     }
-    .footer-marca {
-        grid-column: 1 / -1;
-    }
+
+    .footer-brand { grid-column: 1 / -1; }
 }
 
-@media (max-width: 560px) {
-    .footer-inner {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-    .footer-bottom-inner {
-        flex-direction: column;
-        text-align: center;
-    }
+@media (max-width: 480px) {
+    .footer-inner { grid-template-columns: 1fr; }
 }
 </style>

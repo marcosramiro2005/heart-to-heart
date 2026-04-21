@@ -1,157 +1,355 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue'
-import { ref } from 'vue'
-import { router, Link } from '@inertiajs/vue3'
+import { ref, computed } from 'vue'
+import { Link, router, usePage } from '@inertiajs/vue3'
+import axios from 'axios'
 
 const props = defineProps({
-    posts: Object,
-    categoria: String,
-    busqueda: String,
+    posts:      Object,
+    destacados: Array,
+    trending:   Array,
+    stats:      Object,
+    categoria:  String,
+    busqueda:   String,
+    orden:      String,
 })
 
+const page        = usePage()
+const mostrarForm = ref(false)
+const busqueda    = ref(props.busqueda || '')
+const nuevoPost   = ref({ title: '', content: '', is_anonymous: false, categoria: 'general' })
+const enviando    = ref(false)
+
 const categorias = [
-    { id: 'todos', label: '🌐 Todos', color: '#f0f0f0' },
-    { id: 'ansiedad', label: '😰 Ansiedad', color: '#d0eaf8' },
-    { id: 'depresion', label: '😢 Depresión', color: '#e8d5f5' },
-    { id: 'relaciones', label: '💙 Relaciones', color: '#ffd5d5' },
-    { id: 'autoestima', label: '💪 Autoestima', color: '#d4edda' },
-    { id: 'sueno', label: '😴 Sueño', color: '#fff9c4' },
-    { id: 'general', label: '💬 General', color: '#E8FAF9' },
+    { id: 'todos',      label: 'Todos',       emoji: '🌐' },
+    { id: 'general',    label: 'General',      emoji: '💬' },
+    { id: 'ansiedad',   label: 'Ansiedad',     emoji: '😰' },
+    { id: 'depresion',  label: 'Depresión',    emoji: '😢' },
+    { id: 'relaciones', label: 'Relaciones',   emoji: '💙' },
+    { id: 'autoestima', label: 'Autoestima',   emoji: '💪' },
+    { id: 'duelo',      label: 'Duelo',        emoji: '🕊️' },
+    { id: 'otros',      label: 'Otros',        emoji: '🌿' },
 ]
 
-const busqueda = ref(props.busqueda || '')
-const mostrarFormulario = ref(false)
+const ordenes = [
+    { id: 'reciente',  label: '🕐 Reciente' },
+    { id: 'popular',   label: '❤️ Popular' },
+    { id: 'comentado', label: '💬 Más comentado' },
+]
+
+const colorCategoria = (cat) => ({
+    general:    '#E8FAF9',
+    ansiedad:   '#d0eaf8',
+    depresion:  '#e8d5f5',
+    relaciones: '#fce4ec',
+    autoestima: '#fff9c4',
+    duelo:      '#e8eaf6',
+    otros:      '#d4edda',
+}[cat] ?? '#fafafa')
 
 const filtrar = (cat) => {
-    router.get('/comunidad', { categoria: cat, busqueda: busqueda.value }, { preserveState: true })
+    router.get('/comunidad', {
+        categoria: cat,
+        orden:     props.orden,
+        busqueda:  busqueda.value,
+    }, { preserveState: true })
+}
+
+const cambiarOrden = (ord) => {
+    router.get('/comunidad', {
+        categoria: props.categoria,
+        orden:     ord,
+        busqueda:  busqueda.value,
+    }, { preserveState: true })
 }
 
 const buscar = () => {
-    router.get('/comunidad', { categoria: props.categoria, busqueda: busqueda.value }, { preserveState: true })
+    router.get('/comunidad', {
+        categoria: props.categoria,
+        orden:     props.orden,
+        busqueda:  busqueda.value,
+    })
 }
 
-const getCategoriaColor = (cat) => {
-    return categorias.find(c => c.id === cat)?.color || '#f0f0f0'
+const publicar = () => {
+    if (!nuevoPost.value.title.trim() || !nuevoPost.value.content.trim()) return
+    enviando.value = true
+    router.post('/comunidad', nuevoPost.value, {
+        onSuccess: () => {
+            mostrarForm.value = false
+            nuevoPost.value   = { title: '', content: '', is_anonymous: false, categoria: 'general' }
+            enviando.value    = false
+        },
+        onError: () => { enviando.value = false }
+    })
 }
 
-const getCategoriaLabel = (cat) => {
-    return categorias.find(c => c.id === cat)?.label || cat
+const toggleLike = async (postId) => {
+    await axios.post(`/comunidad/${postId}/like`)
+    router.reload({ only: ['posts'] })
 }
+
+const contadorChars = computed(() => nuevoPost.value.content.length)
 </script>
 
 <template>
     <AppLayout>
-        <div class="forum-wrapper">
+        <div class="foro-wrapper">
 
             <!-- Cabecera -->
-            <div class="forum-hero">
-                <div class="forum-hero-text">
-                    <h1>💬 Comunidad</h1>
-                    <p>Un espacio seguro para compartir, escuchar y acompañar</p>
+            <div class="foro-header">
+                <div>
+                    <h1>💬 Comunidad Heart to Heart</h1>
+                    <p>Un espacio seguro para compartir, escuchar y apoyarse mutuamente</p>
                 </div>
-                <button class="btn-nuevo-post" @click="mostrarFormulario = true">
-                    + Compartir experiencia
+                <button class="btn-nuevo-post" @click="mostrarForm = !mostrarForm">
+                    {{ mostrarForm ? '✕ Cancelar' : '+ Nuevo post' }}
                 </button>
             </div>
 
-            <!-- Buscador -->
-            <div class="buscador">
-                <input
-                    v-model="busqueda"
-                    type="text"
-                    placeholder="Buscar en la comunidad..."
-                    @keyup.enter="buscar"
-                />
-                <button @click="buscar">🔍</button>
-            </div>
-
-            <!-- Filtros de categoría -->
-            <div class="categorias-filtro">
-                <button
-                    v-for="cat in categorias"
-                    :key="cat.id"
-                    class="cat-btn"
-                    :class="{ activa: categoria === cat.id }"
-                    :style="{ backgroundColor: categoria === cat.id ? '#4ECDC4' : cat.color }"
-                    @click="filtrar(cat.id)"
-                >
-                    {{ cat.label }}
-                </button>
-            </div>
-
-            <!-- Lista de posts -->
-            <div class="posts-lista">
-                <div v-if="posts.data.length === 0" class="empty-state">
-                    <p>No hay publicaciones en esta categoría todavía.</p>
-                    <p>¡Sé el primero en compartir tu experiencia! 💚</p>
+            <!-- Stats rápidas -->
+            <div class="foro-stats">
+                <div class="fs-item">
+                    <span class="fs-val">{{ stats.total_posts }}</span>
+                    <span class="fs-lab">Posts totales</span>
                 </div>
+                <div class="fs-item">
+                    <span class="fs-val">{{ stats.posts_hoy }}</span>
+                    <span class="fs-lab">Hoy</span>
+                </div>
+                <div class="fs-item">
+                    <span class="fs-val">{{ stats.total_usuarios }}</span>
+                    <span class="fs-lab">Participantes</span>
+                </div>
+            </div>
 
-                <div
-                    v-for="post in posts.data"
-                    :key="post.id"
-                    class="post-card"
-                    :class="{ pinned: post.is_pinned }"
-                >
-                    <div class="post-header">
-                        <span
-                            class="post-categoria"
-                            :style="{ backgroundColor: getCategoriaColor(post.category) }"
-                        >
-                            {{ getCategoriaLabel(post.category) }}
-                        </span>
-                        <span v-if="post.is_pinned" class="pin-badge">📌 Destacado</span>
-                        <span class="post-fecha">{{ post.created_at }}</span>
-                    </div>
+            <!-- Formulario nuevo post -->
+            <Transition name="slide-down">
+                <div v-if="mostrarForm" class="nuevo-post-form">
+                    <h3>✍️ Compartir con la comunidad</h3>
 
-                    <Link :href="`/comunidad/${post.id}`" class="post-titulo">
-                        {{ post.title }}
-                    </Link>
-
-                    <p class="post-preview">{{ post.content }}...</p>
-
-                    <div class="post-footer">
-                        <span class="post-autor">✍️ {{ post.author_name }}</span>
-                        <div class="post-stats">
-                            <span class="stat" :class="{ liked: post.liked_by_me }">
-                                ❤️ {{ post.likes_count }}
-                            </span>
-                            <span class="stat">💬 {{ post.comments_count }}</span>
+                    <div class="npf-row">
+                        <div class="form-group fg-flex">
+                            <label>Categoría</label>
+                            <select v-model="nuevoPost.categoria" class="npf-select">
+                                <option v-for="cat in categorias.filter(c => c.id !== 'todos')"
+                                    :key="cat.id" :value="cat.id">
+                                    {{ cat.emoji }} {{ cat.label }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="npf-anon">
+                            <input type="checkbox" id="anon" v-model="nuevoPost.is_anonymous" />
+                            <label for="anon">🎭 Publicar como anónimo/a</label>
                         </div>
                     </div>
+
+                    <input
+                        v-model="nuevoPost.title"
+                        type="text"
+                        placeholder="Título de tu post..."
+                        class="npf-titulo"
+                        maxlength="200"
+                    />
+
+                    <div class="npf-contenido-wrap">
+                        <textarea
+                            v-model="nuevoPost.content"
+                            placeholder="Comparte lo que sientes, una experiencia, un consejo... Este es tu espacio seguro."
+                            rows="5"
+                            class="npf-contenido"
+                            maxlength="2000"
+                        ></textarea>
+                        <span class="npf-chars">{{ contadorChars }}/2000</span>
+                    </div>
+
+                    <button
+                        class="btn-publicar"
+                        @click="publicar"
+                        :disabled="!nuevoPost.title.trim() || !nuevoPost.content.trim() || enviando"
+                    >
+                        {{ enviando ? '⏳ Publicando...' : '💚 Publicar' }}
+                    </button>
+                </div>
+            </Transition>
+
+            <div class="foro-grid">
+
+                <!-- Columna principal -->
+                <div class="foro-main">
+
+                    <!-- Filtros -->
+                    <div class="foro-filtros">
+                        <div class="cats-scroll">
+                            <button
+                                v-for="cat in categorias"
+                                :key="cat.id"
+                                class="cat-btn"
+                                :class="{ activa: categoria === cat.id }"
+                                @click="filtrar(cat.id)"
+                            >
+                                {{ cat.emoji }} {{ cat.label }}
+                            </button>
+                        </div>
+
+                        <div class="filtros-bottom">
+                            <div class="orden-btns">
+                                <button
+                                    v-for="ord in ordenes"
+                                    :key="ord.id"
+                                    class="ord-btn"
+                                    :class="{ activo: orden === ord.id }"
+                                    @click="cambiarOrden(ord.id)"
+                                >
+                                    {{ ord.label }}
+                                </button>
+                            </div>
+                            <div class="buscador-foro">
+                                <input
+                                    v-model="busqueda"
+                                    type="text"
+                                    placeholder="Buscar..."
+                                    @keyup.enter="buscar"
+                                />
+                                <button @click="buscar">🔍</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de posts -->
+                    <div v-if="posts.data.length === 0" class="foro-empty">
+                        <span>💬</span>
+                        <p>No hay posts en esta categoría. ¡Sé el primero en compartir!</p>
+                    </div>
+
+                    <div v-else class="posts-lista">
+                        <div
+                            v-for="post in posts.data"
+                            :key="post.id"
+                            class="post-card"
+                            :class="{ destacado: post.is_featured }"
+                        >
+                            <div v-if="post.is_featured" class="post-featured-badge">⭐ Destacado</div>
+
+                            <div class="pc-header">
+                                <div class="pc-autor">
+                                    <span class="pc-avatar">{{ post.avatar }}</span>
+                                    <div>
+                                        <span class="pc-nombre">{{ post.autor }}</span>
+                                        <span class="pc-fecha">{{ post.fecha }}</span>
+                                    </div>
+                                </div>
+                                <span
+                                    class="pc-categoria"
+                                    :style="{ backgroundColor: colorCategoria(post.categoria) }"
+                                >
+                                    {{ categorias.find(c => c.id === post.categoria)?.emoji }}
+                                    {{ post.categoria }}
+                                </span>
+                            </div>
+
+                            <Link :href="`/comunidad/${post.id}`" class="pc-titulo">
+                                {{ post.title }}
+                            </Link>
+
+                            <p class="pc-content">{{ post.content }}</p>
+
+                            <div class="pc-footer">
+                                <button
+                                    class="pc-like-btn"
+                                    :class="{ liked: post.liked }"
+                                    @click="toggleLike(post.id)"
+                                >
+                                    {{ post.liked ? '❤️' : '🤍' }} {{ post.likes_count }}
+                                </button>
+                                <Link :href="`/comunidad/${post.id}`" class="pc-comments">
+                                    💬 {{ post.comments_count }}
+                                </Link>
+                                <span class="pc-views">👁 {{ post.views }}</span>
+                                <Link :href="`/comunidad/${post.id}`" class="pc-leer">
+                                    Leer →
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Paginación -->
+                    <div v-if="posts.last_page > 1" class="paginacion">
+                        <button
+                            :disabled="posts.current_page === 1"
+                            @click="router.get('/comunidad', { categoria, orden, busqueda, page: posts.current_page - 1 })"
+                            class="pag-btn"
+                        >← Anterior</button>
+                        <span>{{ posts.current_page }} / {{ posts.last_page }}</span>
+                        <button
+                            :disabled="posts.current_page === posts.last_page"
+                            @click="router.get('/comunidad', { categoria, orden, busqueda, page: posts.current_page + 1 })"
+                            class="pag-btn"
+                        >Siguiente →</button>
+                    </div>
+
+                </div>
+
+                <!-- Sidebar -->
+                <div class="foro-sidebar">
+
+                    <!-- Trending -->
+                    <div class="sidebar-card" v-if="trending.length > 0">
+                        <h3>🔥 Trending esta semana</h3>
+                        <div class="trending-lista">
+                            <Link
+                                v-for="(t, i) in trending"
+                                :key="t.id"
+                                :href="`/comunidad/${t.id}`"
+                                class="trending-item"
+                            >
+                                <span class="ti-num">{{ i + 1 }}</span>
+                                <span class="ti-titulo">{{ t.title }}</span>
+                                <span class="ti-score">🔥{{ t.score }}</span>
+                            </Link>
+                        </div>
+                    </div>
+
+                    <!-- Destacados -->
+                    <div class="sidebar-card" v-if="destacados.length > 0">
+                        <h3>⭐ Posts destacados</h3>
+                        <div class="destacados-lista">
+                            <Link
+                                v-for="dest in destacados"
+                                :key="dest.id"
+                                :href="`/comunidad/${dest.id}`"
+                                class="dest-item"
+                            >
+                                <span class="di-avatar">{{ dest.avatar }}</span>
+                                <div class="di-info">
+                                    <span class="di-titulo">{{ dest.title }}</span>
+                                    <span class="di-meta">❤️ {{ dest.likes_count }} · 💬 {{ dest.comments_count }}</span>
+                                </div>
+                            </Link>
+                        </div>
+                    </div>
+
+                    <!-- Normas -->
+                    <div class="sidebar-card normas-card">
+                        <h3>📋 Normas de la comunidad</h3>
+                        <ul>
+                            <li>🤝 Trata a todos con respeto y empatía</li>
+                            <li>🔒 Puedes publicar de forma anónima</li>
+                            <li>💙 Si alguien está en crisis, recuerda el 024</li>
+                            <li>🚫 No se permite contenido dañino o discriminatorio</li>
+                        </ul>
+                    </div>
+
                 </div>
             </div>
 
-            <!-- Paginación -->
-            <div class="paginacion" v-if="posts.last_page > 1">
-                <button
-                    v-for="page in posts.last_page"
-                    :key="page"
-                    class="page-btn"
-                    :class="{ activa: page === posts.current_page }"
-                    @click="router.get('/comunidad', { categoria, busqueda, page })"
-                >
-                    {{ page }}
-                </button>
-            </div>
-
         </div>
-
-        <!-- Modal nuevo post -->
-        <div v-if="mostrarFormulario" class="modal-overlay" @click.self="mostrarFormulario = false">
-            <NuevoPost @cerrar="mostrarFormulario = false" />
-        </div>
-
     </AppLayout>
 </template>
 
-<script>
-import NuevoPost from './NuevoPost.vue'
-export default { components: { NuevoPost } }
-</script>
-
 <style scoped>
-.forum-wrapper {
-    max-width: 800px;
+.foro-wrapper {
+    max-width: 1100px;
     margin: 0 auto;
     padding: 2rem 1.5rem;
     display: flex;
@@ -159,226 +357,445 @@ export default { components: { NuevoPost } }
     gap: 1.5rem;
 }
 
-.forum-hero {
-    background: #4ECDC4;
-    border-radius: 16px;
-    padding: 1.5rem 2rem;
+/* ── Header ── */
+.foro-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 1rem;
     flex-wrap: wrap;
+    gap: 1rem;
 }
 
-.forum-hero-text h1 {
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: #1a1a1a;
-    margin: 0 0 0.3rem;
-}
-
-.forum-hero-text p {
-    color: #2D2D2D;
-    margin: 0;
-    font-size: 0.95rem;
-}
+.foro-header h1 { font-size: 1.6rem; font-weight: 800; margin: 0; }
+.foro-header p  { color: #666; margin: 0.25rem 0 0; font-size: 0.92rem; }
 
 .btn-nuevo-post {
     padding: 0.75rem 1.5rem;
-    background: white;
-    color: #3BAFA7;
+    background: #4ECDC4;
+    color: white;
     font-weight: 700;
     border: none;
     border-radius: 25px;
     cursor: pointer;
-    font-size: 0.95rem;
-    transition: transform 0.2s;
+    font-family: inherit;
+    transition: background 0.2s;
     white-space: nowrap;
 }
 
-.btn-nuevo-post:hover { transform: translateY(-2px); }
+.btn-nuevo-post:hover { background: #3BAFA7; }
 
-.buscador {
+/* ── Stats ── */
+.foro-stats {
     display: flex;
-    gap: 0.5rem;
+    gap: 1rem;
 }
 
-.buscador input {
-    flex: 1;
-    padding: 0.75rem 1rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 25px;
-    font-size: 0.95rem;
-    outline: none;
-    transition: border-color 0.2s;
-    font-family: inherit;
+.fs-item {
+    background: white;
+    border-radius: 12px;
+    padding: 0.75rem 1.25rem;
+    border: 1px solid #f0f0f0;
+    text-align: center;
 }
 
-.buscador input:focus { border-color: #4ECDC4; }
+.fs-val { display: block; font-size: 1.5rem; font-weight: 900; color: #4ECDC4; }
+.fs-lab { display: block; font-size: 0.72rem; color: #888; font-weight: 600; }
 
-.buscador button {
-    padding: 0.75rem 1rem;
-    background: #4ECDC4;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-    font-size: 1rem;
-}
-
-.categorias-filtro {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.cat-btn {
-    padding: 0.4rem 1rem;
-    border: 2px solid transparent;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: #2D2D2D;
-}
-
-.cat-btn.activa {
-    color: white;
-    border-color: #3BAFA7;
-}
-
-.posts-lista {
+/* ── Formulario ── */
+.nuevo-post-form {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 2px solid #4ECDC4;
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
 
-.empty-state {
-    text-align: center;
-    padding: 3rem;
-    color: #666;
-    font-size: 1rem;
-    line-height: 2;
-}
+.nuevo-post-form h3 { font-size: 1rem; font-weight: 700; margin: 0; }
 
-.post-card {
-    background: white;
-    border: 1px solid #f0f0f0;
-    border-radius: 16px;
-    padding: 1.25rem 1.5rem;
+.npf-row {
     display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-    transition: box-shadow 0.2s;
-}
-
-.post-card:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-}
-
-.post-card.pinned {
-    border-left: 4px solid #4ECDC4;
-}
-
-.post-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    gap: 1rem;
+    align-items: flex-end;
     flex-wrap: wrap;
 }
 
-.post-categoria {
-    padding: 0.2rem 0.7rem;
+.fg-flex { display: flex; flex-direction: column; gap: 0.35rem; flex: 1; }
+.fg-flex label { font-size: 0.82rem; font-weight: 700; color: #2D2D2D; }
+
+.npf-select {
+    padding: 0.6rem 0.75rem;
+    border: 2px solid #e8f5f4;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-family: inherit;
+    outline: none;
+    background: white;
+    cursor: pointer;
+}
+
+.npf-anon {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #555;
+    padding-bottom: 0.15rem;
+}
+
+.npf-anon input { accent-color: #4ECDC4; cursor: pointer; }
+.npf-anon label { cursor: pointer; }
+
+.npf-titulo {
+    padding: 0.75rem 1rem;
+    border: 2px solid #e8f5f4;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.npf-titulo:focus { border-color: #4ECDC4; }
+
+.npf-contenido-wrap { position: relative; }
+
+.npf-contenido {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e8f5f4;
+    border-radius: 10px;
+    font-size: 0.92rem;
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+    line-height: 1.6;
+    transition: border-color 0.2s;
+}
+
+.npf-contenido:focus { border-color: #4ECDC4; }
+
+.npf-chars {
+    position: absolute;
+    bottom: 8px;
+    right: 10px;
+    font-size: 0.72rem;
+    color: #aaa;
+}
+
+.btn-publicar {
+    padding: 0.85rem;
+    background: #4ECDC4;
+    color: white;
+    font-weight: 700;
+    border: none;
     border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s;
+}
+
+.btn-publicar:hover:not(:disabled) { background: #3BAFA7; }
+.btn-publicar:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Animación formulario */
+.slide-down-enter-active, .slide-down-leave-active {
+    transition: opacity 0.2s, transform 0.2s;
+}
+.slide-down-enter-from, .slide-down-leave-to {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+/* ── Grid ── */
+.foro-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+/* ── Filtros ── */
+.foro-filtros { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem; }
+
+.cats-scroll { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+.cat-btn {
+    padding: 0.4rem 0.9rem;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 20px;
+    background: white;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.cat-btn.activa { background: #4ECDC4; border-color: #4ECDC4; color: white; }
+
+.filtros-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.orden-btns { display: flex; gap: 0.4rem; }
+
+.ord-btn {
+    padding: 0.35rem 0.85rem;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 16px;
+    background: white;
     font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.ord-btn.activo { background: #E8FAF9; border-color: #4ECDC4; color: #3BAFA7; }
+
+.buscador-foro { display: flex; gap: 0.4rem; }
+
+.buscador-foro input {
+    padding: 0.4rem 0.75rem;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-family: inherit;
+    outline: none;
+    width: 160px;
+    transition: border-color 0.2s;
+}
+
+.buscador-foro input:focus { border-color: #4ECDC4; }
+
+.buscador-foro button {
+    padding: 0.4rem 0.75rem;
+    background: #4ECDC4;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+/* ── Posts ── */
+.posts-lista { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.foro-empty {
+    text-align: center;
+    padding: 3rem;
+    background: #fafafa;
+    border-radius: 16px;
+}
+
+.foro-empty span { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; }
+.foro-empty p    { color: #aaa; font-size: 0.9rem; }
+
+.post-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.25rem;
+    border: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transition: box-shadow 0.2s, transform 0.2s;
+    position: relative;
+}
+
+.post-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-1px); }
+.post-card.destacado { border-color: #FFD700; }
+
+.post-featured-badge {
+    position: absolute;
+    top: -1px;
+    right: 1rem;
+    background: #FFD700;
+    color: #2D2D2D;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 0 0 8px 8px;
+}
+
+.pc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.pc-autor { display: flex; align-items: center; gap: 0.6rem; }
+.pc-avatar { font-size: 1.3rem; }
+.pc-nombre { display: block; font-size: 0.85rem; font-weight: 700; color: #2D2D2D; }
+.pc-fecha  { display: block; font-size: 0.72rem; color: #aaa; }
+
+.pc-categoria {
+    padding: 0.2rem 0.65rem;
+    border-radius: 10px;
+    font-size: 0.72rem;
     font-weight: 600;
     color: #2D2D2D;
+    white-space: nowrap;
 }
 
-.pin-badge {
-    font-size: 0.78rem;
-    color: #3BAFA7;
-    font-weight: 600;
-}
-
-.post-fecha {
-    font-size: 0.78rem;
-    color: #aaa;
-    margin-left: auto;
-}
-
-.post-titulo {
-    font-size: 1.05rem;
+.pc-titulo {
+    font-size: 1rem;
     font-weight: 700;
     color: #2D2D2D;
     text-decoration: none;
+    line-height: 1.4;
     transition: color 0.2s;
 }
 
-.post-titulo:hover { color: #4ECDC4; }
+.pc-titulo:hover { color: #4ECDC4; }
 
-.post-preview {
-    font-size: 0.9rem;
+.pc-content {
+    font-size: 0.88rem;
     color: #666;
     line-height: 1.5;
     margin: 0;
 }
 
-.post-footer {
+.pc-footer {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-top: 0.3rem;
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #f0f0f0;
 }
 
-.post-autor {
-    font-size: 0.82rem;
-    color: #888;
-}
-
-.post-stats {
-    display: flex;
-    gap: 1rem;
-}
-
-.stat {
+.pc-like-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
     font-size: 0.85rem;
+    font-weight: 600;
     color: #888;
+    padding: 0;
+    transition: transform 0.2s;
+    font-family: inherit;
 }
 
-.stat.liked { color: #E63946; }
+.pc-like-btn:hover { transform: scale(1.1); }
+.pc-like-btn.liked { color: #E63946; }
 
+.pc-comments, .pc-views {
+    font-size: 0.82rem;
+    color: #aaa;
+    text-decoration: none;
+}
+
+.pc-leer {
+    margin-left: auto;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #4ECDC4;
+    text-decoration: none;
+}
+
+/* ── Paginación ── */
 .paginacion {
     display: flex;
     justify-content: center;
-    gap: 0.5rem;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
 }
 
-.page-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 2px solid #e0e0e0;
+.pag-btn {
+    padding: 0.6rem 1.25rem;
+    border: 2px solid #4ECDC4;
     background: white;
+    color: #3BAFA7;
+    border-radius: 25px;
     font-weight: 600;
     cursor: pointer;
+    font-family: inherit;
     transition: all 0.2s;
 }
 
-.page-btn.activa {
-    background: #4ECDC4;
-    border-color: #4ECDC4;
-    color: white;
+.pag-btn:hover:not(:disabled) { background: #4ECDC4; color: white; }
+.pag-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Sidebar ── */
+.sidebar-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.25rem;
+    border: 1px solid #f0f0f0;
+    margin-bottom: 1rem;
 }
 
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
+.sidebar-card h3 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem;
+    color: #2D2D2D;
+}
+
+/* Trending */
+.trending-lista { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.trending-item {
     display: flex;
     align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 1rem;
+    gap: 0.6rem;
+    text-decoration: none;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid #f0f0f0;
+    transition: color 0.2s;
+}
+
+.trending-item:last-child { border-bottom: none; }
+.trending-item:hover .ti-titulo { color: #4ECDC4; }
+
+.ti-num { font-size: 0.8rem; font-weight: 900; color: #4ECDC4; min-width: 18px; }
+.ti-titulo { flex: 1; font-size: 0.82rem; color: #2D2D2D; line-height: 1.3; }
+.ti-score  { font-size: 0.75rem; color: #aaa; white-space: nowrap; }
+
+/* Destacados */
+.destacados-lista { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.dest-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    text-decoration: none;
+    transition: opacity 0.2s;
+}
+
+.dest-item:hover { opacity: 0.8; }
+
+.di-avatar { font-size: 1.3rem; flex-shrink: 0; }
+.di-info   { display: flex; flex-direction: column; gap: 0.15rem; }
+.di-titulo { font-size: 0.82rem; font-weight: 600; color: #2D2D2D; line-height: 1.3; }
+.di-meta   { font-size: 0.72rem; color: #aaa; }
+
+/* Normas */
+.normas-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.normas-card li { font-size: 0.82rem; color: #555; line-height: 1.4; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+    .foro-grid { grid-template-columns: 1fr; }
+    .foro-sidebar { display: none; }
 }
 </style>

@@ -7,9 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class ForumPost extends Model
 {
     protected $fillable = [
-        'user_id', 'title', 'content', 'category',
-        'is_anonymous', 'likes_count', 'comments_count', 'is_pinned'
-    ];
+    'user_id', 'title', 'content', 'is_anonymous',
+    'categoria', 'category', 'is_featured', 'views',
+    'likes_count', 'comments_count',
+];
 
     protected $casts = [
         'is_anonymous' => 'boolean',
