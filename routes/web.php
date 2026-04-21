@@ -9,6 +9,7 @@ use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\AchievementController;
 use App\Http\Controllers\ResourceLibraryController;
 use App\Http\Controllers\ChallengeController;
+use App\Http\Controllers\WellnessTestController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -107,6 +108,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/retos/{challenge}/unirse',               [ChallengeController::class, 'unirse'])->name('challenges.join');
     Route::post('/retos/{userChallenge}/completar-dia',    [ChallengeController::class, 'completarDia'])->name('challenges.complete');
     Route::post('/retos/{userChallenge}/abandonar',        [ChallengeController::class, 'abandonar'])->name('challenges.abandon');
+    Route::get('/test-bienestar',         [WellnessTestController::class, 'index'])->middleware('auth')->name('wellness.index');
+    Route::post('/test-bienestar/guardar',[WellnessTestController::class, 'guardar'])->middleware('auth')->name('wellness.guardar');
     Route::get('/sos', fn() => Inertia::render('SOS/Index'))->name('sos');
 });
 
