@@ -20,7 +20,7 @@ export default defineConfig({
     server: {
         host: '0.0.0.0',
         port: 5173,
-        hmr: { host: '192.168.1.40', port: 5173 },
+        hmr: { host: 'localhost', port: 5173 },
     },
     build: {
         rollupOptions: {

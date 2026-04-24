@@ -791,6 +791,15 @@ onUnmounted(() => {
 
 /* Responsive */
 @media (max-width: 800px) {
-    .focus-grid { grid-template-columns: 1fr; }
+    .focus-grid    { grid-template-columns: 1fr; }
+    .fh-stats      { flex-wrap: wrap; }
+    .fhs-item      { flex: 1; min-width: 80px; }
+}
+
+@media (max-width: 480px) {
+    .focus-wrapper { padding: 1.25rem 1rem; }
+    .focus-header  { flex-direction: column; align-items: flex-start; }
+    .config-grid   { grid-template-columns: repeat(2, 1fr); }
+    .musica-grid   { grid-template-columns: repeat(2, 1fr); }
 }
 </style>

@@ -581,11 +581,53 @@ onUnmounted(() => {
     box-shadow: 0 6px 24px rgba(230,57,70,0.5);
 }
 
+/* ── Hamburguesa animación X ── */
+.hamburger span:nth-child(1).open { transform: rotate(45deg) translate(5px, 5px); }
+.hamburger span:nth-child(2).open { opacity: 0; transform: scaleX(0); }
+.hamburger span:nth-child(3).open { transform: rotate(-45deg) translate(5px, -5px); }
+
+/* ── Mega-menu: no desbordar en pantallas pequeñas ── */
+@media (max-width: 600px) {
+    .tecnicas-mega {
+        position: fixed;
+        top: 60px;
+        left: 0.75rem;
+        right: 0.75rem;
+        width: auto;
+        transform: none;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+    .tecnicas-mega-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── Avatar dropdown: no salir de pantalla en móvil ── */
+@media (max-width: 420px) {
+    .avatar-dropdown {
+        right: -1rem;
+        width: calc(100vw - 2rem);
+        max-width: 280px;
+    }
+}
+
 /* ── Responsive ── */
 @media (max-width: 960px) {
     .nav-links  { display: none; }
     .hamburger  { display: flex; }
     .nav-sos    { display: none; }
+}
+
+/* ── Botón SOS flotante: más pequeño en móvil ── */
+@media (max-width: 480px) {
+    .btn-sos-flotante {
+        bottom: 1.25rem;
+        right: 1.25rem;
+        padding: 0.5rem 0.9rem;
+        font-size: 0.78rem;
+    }
+    .navbar-inner {
+        padding: 0.6rem 1rem;
+    }
 }
 
 main { outline: none; min-height: calc(100vh - 60px); }
@@ -602,7 +644,10 @@ main { outline: none; min-height: calc(100vh - 60px); }
     font-size: 0.92rem;
     z-index: 800;
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    white-space: nowrap;
+    white-space: normal;
+    max-width: min(90vw, 420px);
+    text-align: center;
+    word-break: break-word;
 }
 
 .flash-success {

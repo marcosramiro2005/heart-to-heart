@@ -614,4 +614,9 @@ const progresoPct = computed(() =>
     opacity: 0;
     transform: translateX(-30px);
 }
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+    .ob-avatares-grid { grid-template-columns: repeat(5, 1fr); }
+}
 </style>

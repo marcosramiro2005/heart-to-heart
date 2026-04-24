@@ -17,6 +17,7 @@
 html {
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
 }
 
 body {
@@ -25,6 +26,7 @@ body {
     color: #2D2D2D;
     margin: 0;
     padding: 0;
+    overflow-x: hidden;
 }
 
 /* ── NProgress ── */

@@ -4,6 +4,10 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 
 const scrollY = ref(0)
 const onScroll = () => { scrollY.value = window.scrollY }
+const mobileMenuOpen = ref(false)
+const toggleMobileMenu = () => { mobileMenuOpen.value = !mobileMenuOpen.value }
+const closeMobileMenu = () => { mobileMenuOpen.value = false }
+
 onMounted(() => window.addEventListener('scroll', onScroll))
 onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
@@ -123,16 +127,35 @@ const faqAbierta = ref(null)
                     <span>HEART TO HEART</span>
                 </div>
                 <div class="land-nav-links">
-                    <a href="#como-funciona">Cómo funciona</a>
-                    <a href="#funciones">Funciones</a>
-                    <a href="#tecnicas">Técnicas</a>
-                    <a href="#faq">FAQ</a>
+                    <a href="#como-funciona" @click="closeMobileMenu">Cómo funciona</a>
+                    <a href="#funciones" @click="closeMobileMenu">Funciones</a>
+                    <a href="#tecnicas" @click="closeMobileMenu">Técnicas</a>
+                    <a href="#faq" @click="closeMobileMenu">FAQ</a>
                 </div>
                 <div class="land-nav-ctas">
                     <Link href="/login" class="btn-login">Iniciar sesión</Link>
                     <Link href="/register" class="btn-register">Empezar gratis</Link>
                 </div>
+                <!-- Hamburguesa móvil -->
+                <button class="land-hamburger" @click="toggleMobileMenu" :class="{ open: mobileMenuOpen }" aria-label="Menú">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
             </div>
+
+            <!-- Menú móvil -->
+            <Transition name="land-slide">
+                <div v-if="mobileMenuOpen" class="land-mobile-menu">
+                    <a href="#como-funciona" @click="closeMobileMenu">🚀 Cómo funciona</a>
+                    <a href="#funciones" @click="closeMobileMenu">✨ Funciones</a>
+                    <a href="#tecnicas" @click="closeMobileMenu">🌿 Técnicas</a>
+                    <a href="#faq" @click="closeMobileMenu">❓ FAQ</a>
+                    <div class="lmm-divider"></div>
+                    <Link href="/login" class="lmm-btn-login" @click="closeMobileMenu">Iniciar sesión</Link>
+                    <Link href="/register" class="lmm-btn-register" @click="closeMobileMenu">💚 Empezar gratis</Link>
+                </div>
+            </Transition>
         </nav>
 
         <!-- ── Hero ── -->
@@ -1334,6 +1357,91 @@ const faqAbierta = ref(null)
 .lf-links a:hover { text-decoration: underline; }
 
 /* ─────────────────────────────────────
+   HAMBURGUESA LANDING
+───────────────────────────────────── */
+.land-hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    flex-shrink: 0;
+}
+
+.land-hamburger span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: #2D2D2D;
+    border-radius: 2px;
+    transition: all 0.3s;
+}
+
+.land-hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+.land-hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.land-hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+/* Menú móvil landing */
+.land-mobile-menu {
+    display: flex;
+    flex-direction: column;
+    background: rgba(255,255,255,0.98);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid #f0f0f0;
+    padding: 1rem 1.5rem 1.5rem;
+    gap: 0.25rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.land-mobile-menu a {
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2D2D2D;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid #f5f5f5;
+    transition: color 0.2s;
+}
+
+.land-mobile-menu a:hover { color: #4ECDC4; }
+
+.lmm-divider { height: 1px; background: #eee; margin: 0.5rem 0; }
+
+.lmm-btn-login {
+    display: block;
+    text-align: center;
+    padding: 0.75rem;
+    border: 2px solid #4ECDC4;
+    border-radius: 25px;
+    color: #4ECDC4;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s;
+    margin-top: 0.25rem;
+}
+.lmm-btn-login:hover { background: #4ECDC4; color: white; }
+
+.lmm-btn-register {
+    display: block;
+    text-align: center;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, #4ECDC4, #3BAFA7);
+    border-radius: 25px;
+    color: white;
+    font-weight: 700;
+    text-decoration: none;
+    margin-top: 0.25rem;
+    box-shadow: 0 4px 14px rgba(78,205,196,0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.lmm-btn-register:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(78,205,196,0.45); }
+
+.land-slide-enter-active, .land-slide-leave-active { transition: opacity 0.2s, transform 0.2s; }
+.land-slide-enter-from, .land-slide-leave-to { opacity: 0; transform: translateY(-8px); }
+
+/* ─────────────────────────────────────
    RESPONSIVE
 ───────────────────────────────────── */
 @media (max-width: 1024px) {
@@ -1356,13 +1464,30 @@ const faqAbierta = ref(null)
 
 @media (max-width: 768px) {
     .land-nav-links     { display: none; }
+    .land-nav-ctas      { display: none; }
+    .land-hamburger     { display: flex; }
     .tecnicas-grid      { grid-template-columns: repeat(2, 1fr); }
     .funciones-grid     { grid-template-columns: 1fr; }
+    .section-inner      { padding: 3.5rem 1.25rem; }
+    .testimonios-grid   { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {
-    .tecnicas-grid      { grid-template-columns: 1fr; }
+    .tecnicas-grid      { grid-template-columns: repeat(2, 1fr); }
     .hero-demo          { display: none; }
     .stats-row          { grid-template-columns: repeat(2, 1fr); }
+    .section-inner      { padding: 2.5rem 1rem; }
+    .hero-wrapper       { padding: 6rem 1rem 2rem; }
+    .hero h1            { font-size: clamp(1.8rem, 8vw, 2.8rem); }
+    .cta-final          { padding: 4rem 1rem; }
+    .btn-primary        { padding: 0.8rem 1.5rem; font-size: 0.95rem; }
+    .btn-ghost          { padding: 0.8rem 1.2rem; font-size: 0.95rem; }
+    .hero-badge         { font-size: 0.75rem; padding: 0.4rem 0.9rem; }
+    .trust-row          { gap: 0.75rem; }
+    .trust-row span     { font-size: 0.76rem; }
+    .lf-inner           { flex-direction: column; text-align: center; }
+    .lf-links           { justify-content: center; }
+    .sf-card            { gap: 1.5rem; }
+    .sfc-left           { flex-direction: column; align-items: center; text-align: center; }
 }
 </style>

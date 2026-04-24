@@ -539,7 +539,16 @@ const categoriaColor = (cat) => ({
     .retos-grid     { grid-template-columns: repeat(2, 1fr); }
 }
 
+@media (max-width: 768px) {
+    .retos-grid     { grid-template-columns: repeat(2, 1fr); }
+    .ch-stats       { flex-wrap: wrap; }
+    .chs-item       { flex: 1; min-width: 70px; }
+    .ch-tabs        { flex-wrap: wrap; }
+}
+
 @media (max-width: 520px) {
-    .retos-grid { grid-template-columns: 1fr; }
+    .retos-grid     { grid-template-columns: 1fr; }
+    .mis-retos-grid { grid-template-columns: 1fr; }
+    .ch-header      { flex-direction: column; align-items: flex-start; }
 }
 </style>

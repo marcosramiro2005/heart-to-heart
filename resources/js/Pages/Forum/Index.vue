@@ -795,7 +795,24 @@ const contadorChars = computed(() => nuevoPost.value.content.length)
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
-    .foro-grid { grid-template-columns: 1fr; }
+    .foro-grid    { grid-template-columns: 1fr; }
     .foro-sidebar { display: none; }
+    .foro-stats   { flex-wrap: wrap; }
+    .fs-item      { flex: 1; min-width: 80px; }
+}
+
+@media (max-width: 600px) {
+    .foro-wrapper       { padding: 1.25rem 1rem; }
+    .foro-header h1     { font-size: 1.3rem; }
+    .filtros-bottom     { flex-direction: column; align-items: flex-start; }
+    .orden-btns         { flex-wrap: wrap; }
+    .buscador-foro      { width: 100%; }
+    .buscador-foro input { flex: 1; width: 100%; }
+    .npf-row            { flex-direction: column; }
+}
+
+@media (max-width: 480px) {
+    .cats-scroll { gap: 0.3rem; }
+    .cat-btn     { padding: 0.35rem 0.7rem; font-size: 0.78rem; }
 }
 </style>
