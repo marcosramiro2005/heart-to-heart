@@ -1,7 +1,7 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue'
-import { ref, computed, onMounted } from 'vue'
-import axios from 'axios'
+import { ref, computed } from 'vue'
+import { router } from '@inertiajs/vue3'
 
 const props = defineProps({
     graficaLinea:     Array,
@@ -31,25 +31,26 @@ const registrado          = ref(false)
 
 const colorEmocion = (id) => emociones.find(e => e.id === id)?.color ?? '#4ECDC4'
 
-const registrarEmocion = async () => {
+const registrarEmocion = () => {
     if (!emocionSeleccionada.value) return
     enviando.value = true
-    try {
-        await axios.post('/mis-emociones/registrar', {
-            emotion:   emocionSeleccionada.value,
-            intensity: intensidad.value,
-            note:      nota.value,
-        })
-        registrado.value         = true
-        emocionSeleccionada.value = ''
-        intensidad.value          = 5
-        nota.value                = ''
-        setTimeout(() => registrado.value = false, 3000)
-    } catch (e) {
-        console.error(e)
-    } finally {
-        enviando.value = false
-    }
+    router.post('/mis-emociones/registrar', {
+        emotion:   emocionSeleccionada.value,
+        intensity: intensidad.value,
+        note:      nota.value,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            registrado.value          = true
+            emocionSeleccionada.value = ''
+            intensidad.value          = 5
+            nota.value                = ''
+            setTimeout(() => registrado.value = false, 3000)
+        },
+        onFinish: () => {
+            enviando.value = false
+        },
+    })
 }
 
 // ── Calendario ──

@@ -6,7 +6,6 @@ use App\Models\EmotionalRecord;
 use App\Services\AchievementService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Carbon\Carbon;
 
 /**
  * EmotionalDashboardController
@@ -125,17 +124,18 @@ class EmotionalDashboardController extends Controller
             'activities' => 'nullable|string|max:200',
         ]);
 
-        $record = EmotionalRecord::create([
-            'user_id'    => auth()->id(),
-            'emotion'    => $request->emotion,
-            'intensity'  => $request->intensity,
-            'note'       => $request->note,
-            'triggers'   => $request->triggers,
-            'activities' => $request->activities,
+        EmotionalRecord::create([
+            'user_id'     => auth()->id(),
+            'emotion'     => $request->emotion,
+            'intensity'   => $request->intensity,
+            'note'        => $request->note,
+            'triggers'    => $request->triggers,
+            'activities'  => $request->activities,
+            'recorded_at' => now()->toDateString(),
         ]);
 
         // Lanzar la comprobación de logros tras registrar una emoción
-        app(AchievementService::class)->verificar(auth()->user());
+        app(AchievementService::class)->verificarLogros(auth()->id());
 
         return back()->with('success', 'Emoción registrada correctamente');
     }

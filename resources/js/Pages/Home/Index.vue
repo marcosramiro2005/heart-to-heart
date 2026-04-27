@@ -1,8 +1,7 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue'
-import { Link, usePage } from '@inertiajs/vue3'
+import { Link, usePage, router } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
-import axios from 'axios'
 
 const page = usePage()
 const user = computed(() => page.props.auth?.user)
@@ -107,21 +106,21 @@ const emocionesCheckin = [
     { id: 'triste',   emoji: '😢', label: 'Triste',    intensidad: 3 },
 ]
 
-const hacerCheckin = async (emocion) => {
+const hacerCheckin = (emocion) => {
     if (enviandoCheckin.value) return
     emocionCheckin.value  = emocion
     enviandoCheckin.value = true
-    try {
-        await axios.post('/mis-emociones/registrar', {
-            emotion:   emocion.id,
-            intensity: emocion.intensidad,
-            note:      'Check-in diario desde el inicio',
-        })
-    } catch (e) {}
-    finally {
-        enviandoCheckin.value = false
-        checkInHecho.value    = true
-    }
+    router.post('/mis-emociones/registrar', {
+        emotion:   emocion.id,
+        intensity: emocion.intensidad,
+        note:      'Check-in diario desde el inicio',
+    }, {
+        preserveScroll: true,
+        onFinish: () => {
+            enviandoCheckin.value = false
+            checkInHecho.value    = true
+        },
+    })
 }
 </script>
 

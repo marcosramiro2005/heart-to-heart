@@ -89,7 +89,10 @@ onUnmounted(() => {
                 <!-- Logo -->
                 <Link href="/home" class="nav-logo">
                     <img src="/images/logo.png" alt="Heart to Heart" />
-                    <span>HEART TO HEART</span>
+                    <div class="logo-text">
+                        <span class="logo-title">Heart to Heart</span>
+                        <span class="logo-tagline">Bienestar emocional</span>
+                    </div>
                 </Link>
 
                 <!-- Links principales -->
@@ -237,62 +240,100 @@ onUnmounted(() => {
     position: sticky;
     top: 0;
     z-index: 500;
-    background: rgba(255,255,255,0.95);
+    background: rgba(255,255,255,0.97);
     border-bottom: 1px solid transparent;
-    transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
-    backdrop-filter: blur(8px);
+    transition: border-color 0.3s, box-shadow 0.3s;
+    backdrop-filter: blur(12px);
 }
 
 .navbar.scrolled {
-    border-bottom-color: #f0f0f0;
-    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+    border-bottom-color: #ebebeb;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.07);
 }
 
 .navbar-inner {
-    max-width: 1200px;
+    max-width: 1280px;
     margin: 0 auto;
-    padding: 0.7rem 1.5rem;
+    padding: 0 1.5rem;
+    height: 70px;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0;
 }
 
 /* ── Logo ── */
 .nav-logo {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
     text-decoration: none;
+    flex-shrink: 0;
+    padding-right: 1.75rem;
+    margin-right: 1rem;
+    border-right: 1.5px solid #eee;
+}
+
+.nav-logo img {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
     flex-shrink: 0;
 }
 
-.nav-logo img  { width: 38px; height: auto; }
-.nav-logo span { font-weight: 700; font-size: 0.82rem; color: #E63946; letter-spacing: 0.08em; }
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    gap: 1px;
+}
+
+.logo-title {
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: #E63946;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+}
+
+.logo-tagline {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #4ECDC4;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
 
 /* ── Links ── */
 .nav-links {
     display: flex;
     list-style: none;
-    gap: 0.25rem;
+    gap: 0.1rem;
     margin: 0;
     padding: 0;
     flex: 1;
     align-items: center;
+    height: 100%;
 }
 
 .nav-links a {
     text-decoration: none;
-    font-size: 0.85rem;
+    font-size: 0.875rem;
     font-weight: 600;
     color: #555;
-    padding: 0.45rem 0.75rem;
+    padding: 0.5rem 0.85rem;
     border-radius: 8px;
     transition: background 0.15s, color 0.15s;
     white-space: nowrap;
+    position: relative;
 }
 
-.nav-links a:hover { background: #f5f5f5; color: #2D2D2D; }
-.nav-links a.activa { background: #E8FAF9; color: #4ECDC4; }
+.nav-links a:hover { background: #f7f7f7; color: #2D2D2D; }
+.nav-links a.activa {
+    background: #edfaf9;
+    color: #3ab8b0;
+    box-shadow: inset 0 0 0 1px rgba(78,205,196,0.18);
+}
 
 /* ── Técnicas dropdown ── */
 .tecnicas-li { position: relative; }
@@ -626,11 +667,15 @@ onUnmounted(() => {
         font-size: 0.78rem;
     }
     .navbar-inner {
-        padding: 0.6rem 1rem;
+        padding: 0 1rem;
+        height: 62px;
     }
+    .nav-logo { padding-right: 0; border-right: none; margin-right: 0; }
+    .logo-tagline { display: none; }
+    .nav-logo img { width: 46px; height: 46px; }
 }
 
-main { outline: none; min-height: calc(100vh - 60px); }
+main { outline: none; min-height: calc(100vh - 70px); }
 
 /* ── Flash messages ── */
 .flash-msg {

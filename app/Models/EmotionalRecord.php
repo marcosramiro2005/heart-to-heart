@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class EmotionalRecord extends Model
 {
     protected $fillable = [
-        'user_id', 'emotion', 'intensity', 'notes', 'recorded_at'
+        'user_id', 'emotion', 'intensity', 'notes', 'note', 'triggers', 'activities', 'recorded_at'
     ];
 
     protected $casts = [
