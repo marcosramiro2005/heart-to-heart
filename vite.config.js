@@ -25,8 +25,17 @@ export default defineConfig({
     build: {
         rollupOptions: {
             output: {
-                manualChunks: {
-                    vendor: ['vue', '@inertiajs/vue3'],
+                manualChunks(id) {
+                    // Dependencias principales de Vue e Inertia — siempre necesarias
+                    if (id.includes('vue') || id.includes('@inertiajs')) return 'vendor'
+                    // Resto de node_modules en un chunk separado
+                    if (id.includes('node_modules')) return 'deps'
+                    // Páginas de autenticación — pequeñas, se cargan solo en login/register
+                    if (id.includes('/Pages/Auth/')) return 'auth'
+                    // Técnicas de bienestar — muchas páginas similares, se agrupan
+                    if (id.includes('/Pages/Tecnicas/')) return 'tecnicas'
+                    // Foro — páginas pesadas con mucho JS
+                    if (id.includes('/Pages/Forum/')) return 'forum'
                 },
             },
         },

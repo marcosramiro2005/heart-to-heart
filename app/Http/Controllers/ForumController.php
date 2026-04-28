@@ -6,6 +6,7 @@ use App\Models\ForumPost;
 use App\Models\ForumComment;
 use App\Models\ForumLike;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
 /**
@@ -121,12 +122,12 @@ class ForumController extends Controller
                 'score' => $p->likes_count + $p->comments_count,
             ]);
 
-        // Estadísticas globales del foro
-        $stats = [
+        // Estadísticas globales del foro — cacheadas 30 min para no recalcularlas en cada carga
+        $stats = Cache::remember('forum_stats', 1800, fn() => [
             'total_posts'    => ForumPost::count(),
             'posts_hoy'      => ForumPost::whereDate('created_at', today())->count(),
             'total_usuarios' => ForumPost::distinct('user_id')->count('user_id'),
-        ];
+        ]);
 
         return Inertia::render('Forum/Index', [
             'posts'      => $posts,

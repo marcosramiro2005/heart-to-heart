@@ -51,23 +51,23 @@ class ResourceLibraryController extends Controller
             });
         }
 
+        // IDs de recursos guardados: una sola query, usada para todos los recursos de la página
+        $savedIds = ResourceSave::where('user_id', $userId)
+            ->pluck('resource_id')
+            ->toArray();
+
         // Los 3 recursos marcados como destacados para la sección superior
         $destacados = Resource::where('is_published', true)
             ->where('is_featured', true)
             ->take(3)
             ->get()
-            ->map(fn($r) => $this->formatearRecurso($r, $userId));
+            ->map(fn($r) => $this->formatearRecurso($r, $savedIds));
 
         // Paginación de 9 en 9; los destacados aparecen primero
         $recursos = $query->orderByDesc('is_featured')
             ->orderByDesc('created_at')
             ->paginate(9)
-            ->through(fn($r) => $this->formatearRecurso($r, $userId));
-
-        // IDs de recursos guardados por el usuario (para marcar el icono de guardado)
-        $savedIds = ResourceSave::where('user_id', $userId)
-            ->pluck('resource_id')
-            ->toArray();
+            ->through(fn($r) => $this->formatearRecurso($r, $savedIds));
 
         return Inertia::render('Resources/Library', [
             'recursos'   => $recursos,
@@ -89,17 +89,19 @@ class ResourceLibraryController extends Controller
         $resource->increment('views');
         $userId = auth()->id();
 
+        $savedIds = ResourceSave::where('user_id', $userId)->pluck('resource_id')->toArray();
+
         // Recursos de la misma categoría, excluyendo el actual
         $relacionados = Resource::where('is_published', true)
             ->where('category', $resource->category)
             ->where('id', '!=', $resource->id)
             ->take(3)
             ->get()
-            ->map(fn($r) => $this->formatearRecurso($r, $userId));
+            ->map(fn($r) => $this->formatearRecurso($r, $savedIds));
 
         return Inertia::render('Resources/Show', [
             // fullContent = true para incluir el contenido completo en la vista de detalle
-            'recurso'      => $this->formatearRecurso($resource, $userId, true),
+            'recurso'      => $this->formatearRecurso($resource, $savedIds, true),
             'relacionados' => $relacionados,
         ]);
     }
@@ -135,11 +137,13 @@ class ResourceLibraryController extends Controller
     public function guardados()
     {
         $userId   = auth()->id();
+        $savedIds = ResourceSave::where('user_id', $userId)->pluck('resource_id')->toArray();
+
         // whereHas filtra los recursos que tienen al menos un save del usuario actual
         $recursos = Resource::whereHas('saves', fn($q) => $q->where('user_id', $userId))
             ->where('is_published', true)
             ->get()
-            ->map(fn($r) => $this->formatearRecurso($r, $userId));
+            ->map(fn($r) => $this->formatearRecurso($r, $savedIds));
 
         return Inertia::render('Resources/Saved', [
             'recursos' => $recursos,
@@ -155,7 +159,7 @@ class ResourceLibraryController extends Controller
      * @param  bool      $fullContent  Si true, incluye el contenido completo; si false, solo el resumen
      * @return array
      */
-    private function formatearRecurso(Resource $r, int $userId, bool $fullContent = false): array
+    private function formatearRecurso(Resource $r, array $savedIds, bool $fullContent = false): array
     {
         return [
             'id'            => $r->id,
@@ -172,8 +176,8 @@ class ResourceLibraryController extends Controller
             'views'         => $r->views,
             // Color de fondo según categoría, calculado en el modelo Resource
             'category_color'=> $r->category_color,
-            // Comprueba si el usuario tiene guardado este recurso
-            'is_saved'      => $r->isSavedBy($userId),
+            // Comprobación en memoria en lugar de una query por recurso
+            'is_saved'      => in_array($r->id, $savedIds),
             // Etiqueta legible del tipo de contenido
             'type_label'    => [
                 'article'  => '📄 Artículo',

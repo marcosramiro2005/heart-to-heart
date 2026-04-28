@@ -69,46 +69,55 @@ class AchievementService
     {
         $nuevos = [];
 
+        // Precarga todos los logros y los ya desbloqueados en 2 queries (en vez de ~16)
+        $todosLosLogros  = Achievement::all()->keyBy('code');
+        $desbloqueadosIds = UserAchievement::where('user_id', $userId)
+            ->pluck('achievement_id')
+            ->flip(); // convierte a colección indexada por ID para búsquedas O(1)
+
+        $intentar = function (string $code) use ($userId, $todosLosLogros, &$desbloqueadosIds, &$nuevos) {
+            $achievement = $todosLosLogros->get($code);
+            if (!$achievement || $desbloqueadosIds->has($achievement->id)) return;
+
+            UserAchievement::create([
+                'user_id'        => $userId,
+                'achievement_id' => $achievement->id,
+                'unlocked_at'    => now(),
+            ]);
+
+            $desbloqueadosIds->put($achievement->id, 0); // evita doble desbloqueo en la misma llamada
+            $nuevos[] = $achievement;
+        };
+
         // ── Logros por registros emocionales ──
         $totalRegistros = EmotionalRecord::where('user_id', $userId)->count();
-
-        if ($totalRegistros >= 1)  $this->intentarDesbloquear($userId, 'first_day', $nuevos);
-        if ($totalRegistros >= 10) $this->intentarDesbloquear($userId, 'emotions_10', $nuevos);
+        if ($totalRegistros >= 1)  $intentar('first_day');
+        if ($totalRegistros >= 10) $intentar('emotions_10');
 
         // Logros por racha de días consecutivos con registro emocional
         $racha = $this->calcularRacha($userId);
-        if ($racha >= 3)  $this->intentarDesbloquear($userId, 'streak_3', $nuevos);
-        if ($racha >= 7)  $this->intentarDesbloquear($userId, 'streak_7', $nuevos);
-        if ($racha >= 30) $this->intentarDesbloquear($userId, 'streak_30', $nuevos);
+        if ($racha >= 3)  $intentar('streak_3');
+        if ($racha >= 7)  $intentar('streak_7');
+        if ($racha >= 30) $intentar('streak_30');
 
         // ── Logros por sesiones de respiración ──
         $sesiones = BreathingSession::where('user_id', $userId)->count();
-        if ($sesiones >= 1) $this->intentarDesbloquear($userId, 'first_breath', $nuevos);
-        if ($sesiones >= 5) $this->intentarDesbloquear($userId, 'breath_5', $nuevos);
+        if ($sesiones >= 1) $intentar('first_breath');
+        if ($sesiones >= 5) $intentar('breath_5');
 
         // ── Logros por participación en el foro ──
         $posts = ForumPost::where('user_id', $userId)->count();
-        if ($posts >= 1) $this->intentarDesbloquear($userId, 'first_post', $nuevos);
-        if ($posts >= 5) $this->intentarDesbloquear($userId, 'posts_5', $nuevos);
+        if ($posts >= 1) $intentar('first_post');
+        if ($posts >= 5) $intentar('posts_5');
 
         $comentarios = ForumComment::where('user_id', $userId)->count();
-        if ($comentarios >= 1) $this->intentarDesbloquear($userId, 'first_comment', $nuevos);
+        if ($comentarios >= 1) $intentar('first_comment');
 
         // ── Logros por noticias guardadas ──
         $guardadas = SavedNews::where('user_id', $userId)->count();
-        if ($guardadas >= 1) $this->intentarDesbloquear($userId, 'first_news', $nuevos);
+        if ($guardadas >= 1) $intentar('first_news');
 
         return $nuevos;
-    }
-
-    /**
-     * Llama a unlock() y si el logro se desbloqueó lo añade al array de nuevos logros.
-     * Usa el array por referencia (&$nuevos) para acumular los resultados.
-     */
-    private function intentarDesbloquear(int $userId, string $code, array &$nuevos): void
-    {
-        $logro = $this->unlock($userId, $code);
-        if ($logro) $nuevos[] = $logro;
     }
 
     /**

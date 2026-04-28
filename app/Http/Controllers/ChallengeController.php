@@ -29,11 +29,14 @@ class ChallengeController extends Controller
     {
         $userId = auth()->id();
 
-        // Para cada reto del sistema, busca si el usuario tiene un UserChallenge asociado
-        $retosDisponibles = Challenge::all()->map(function ($reto) use ($userId) {
-            $userChallenge = UserChallenge::where('user_id', $userId)
-                ->where('challenge_id', $reto->id)
-                ->first();
+        // Precarga todos los UserChallenge del usuario en una sola query, indexados por challenge_id
+        $userChallengesMap = UserChallenge::where('user_id', $userId)
+            ->get()
+            ->keyBy('challenge_id');
+
+        // Para cada reto del sistema, busca el UserChallenge en memoria (sin más queries)
+        $retosDisponibles = Challenge::all()->map(function ($reto) use ($userChallengesMap) {
+            $userChallenge = $userChallengesMap->get($reto->id);
 
             return [
                 'id'            => $reto->id,
