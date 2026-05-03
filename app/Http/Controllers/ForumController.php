@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ForumPost;
 use App\Models\ForumComment;
 use App\Models\ForumLike;
+use App\Rules\NoHarmfulContent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
@@ -188,8 +189,8 @@ class ForumController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title'        => 'required|string|max:200',
-            'content'      => 'required|string|max:2000',
+            'title'        => ['required', 'string', 'max:200', new NoHarmfulContent],
+            'content'      => ['required', 'string', 'max:2000', new NoHarmfulContent],
             'is_anonymous' => 'boolean',
             'categoria'    => 'nullable|string|in:general,ansiedad,depresion,relaciones,autoestima,duelo,otros',
         ]);
@@ -205,6 +206,8 @@ class ForumController extends Controller
             'category'     => $cat,
         ]);
 
+        Cache::forget('forum_stats');
+
         return back()->with('success', '¡Post publicado! 💚');
     }
 
@@ -216,7 +219,7 @@ class ForumController extends Controller
     public function comment(Request $request, ForumPost $forumPost)
     {
         $request->validate([
-            'content'      => 'required|string|min:5|max:500',
+            'content'      => ['required', 'string', 'min:5', 'max:500', new NoHarmfulContent],
             'is_anonymous' => 'boolean',
         ]);
 
@@ -278,6 +281,8 @@ class ForumController extends Controller
         }
 
         $forumPost->delete();
+
+        Cache::forget('forum_stats');
 
         return redirect()->route('forum.index')
             ->with('success', 'Post eliminado');

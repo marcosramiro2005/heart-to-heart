@@ -89,6 +89,15 @@ const toggleLike = async (postId) => {
     router.reload({ only: ['posts'] })
 }
 
+const eliminarPost = (postId) => {
+    if (confirm('¿Estás seguro de que quieres eliminar esta publicación? Esta acción no se puede deshacer.')) {
+        router.delete(`/comunidad/${postId}`, {
+            preserveState: false,
+            onSuccess: () => router.reload()
+        })
+    }
+}
+
 const contadorChars = computed(() => nuevoPost.value.content.length)
 </script>
 
@@ -239,13 +248,23 @@ const contadorChars = computed(() => nuevoPost.value.content.length)
                                         <span class="pc-fecha">{{ post.fecha }}</span>
                                     </div>
                                 </div>
-                                <span
-                                    class="pc-categoria"
-                                    :style="{ backgroundColor: colorCategoria(post.categoria) }"
-                                >
-                                    {{ categorias.find(c => c.id === post.categoria)?.emoji }}
-                                    {{ post.categoria }}
-                                </span>
+                                <div class="pc-actions">
+                                    <span
+                                        class="pc-categoria"
+                                        :style="{ backgroundColor: colorCategoria(post.categoria) }"
+                                    >
+                                        {{ categorias.find(c => c.id === post.categoria)?.emoji }}
+                                        {{ post.categoria }}
+                                    </span>
+                                    <button
+                                        v-if="post.is_mine"
+                                        class="pc-delete-btn"
+                                        @click="eliminarPost(post.id)"
+                                        title="Eliminar publicación"
+                                    >
+                                        🗑️
+                                    </button>
+                                </div>
                             </div>
 
                             <Link :href="`/comunidad/${post.id}`" class="pc-titulo">
@@ -639,6 +658,12 @@ const contadorChars = computed(() => nuevoPost.value.content.length)
 .pc-nombre { display: block; font-size: 0.85rem; font-weight: 700; color: #2D2D2D; }
 .pc-fecha  { display: block; font-size: 0.72rem; color: #aaa; }
 
+.pc-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .pc-categoria {
     padding: 0.2rem 0.65rem;
     border-radius: 10px;
@@ -646,6 +671,20 @@ const contadorChars = computed(() => nuevoPost.value.content.length)
     font-weight: 600;
     color: #2D2D2D;
     white-space: nowrap;
+}
+
+.pc-delete-btn {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.2rem;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.pc-delete-btn:hover {
+    background: rgba(230, 57, 70, 0.1);
 }
 
 .pc-titulo {

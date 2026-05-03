@@ -206,55 +206,36 @@ const hacerCheckin = (emocion) => {
 
                     </div>
 
-                    <!-- Columna derecha: check-in -->
+                    <!-- Columna derecha: guía de introducción -->
                     <div class="hero-right">
-                        <Transition name="ci-flip" mode="out-in">
-
-                            <div v-if="!checkInHecho" class="checkin-card" key="ci">
-                                <div class="ci-head">
-                                    <div class="ci-head-icon">💆</div>
-                                    <div>
-                                        <h3>¿Cómo estás ahora?</h3>
-                                        <p>Check-in emocional de hoy</p>
-                                    </div>
+                        <div class="guia-card">
+                            <div class="guia-head">
+                                <div class="guia-icon">🗺️</div>
+                                <div>
+                                    <h3>Tu guía de inicio</h3>
+                                    <p>Descubre qué puedes hacer en Heart to Heart</p>
                                 </div>
-                                <div class="ci-grid">
-                                    <button
-                                        v-for="em in emocionesCheckin"
-                                        :key="em.id"
-                                        class="ci-btn"
-                                        :class="{ selected: emocionCheckin?.id === em.id, loading: enviandoCheckin }"
-                                        :disabled="enviandoCheckin"
-                                        @click="hacerCheckin(em)"
-                                    >
-                                        <span class="ci-emoji">{{ em.emoji }}</span>
-                                        <span class="ci-label">{{ em.label }}</span>
-                                    </button>
-                                </div>
-                                <p class="ci-hint">Toca para registrar tu emoción de hoy</p>
                             </div>
-
-                            <div v-else class="checkin-done" key="done">
-                                <div class="cd-circle">{{ emocionCheckin.emoji }}</div>
-                                <h3>¡Registrado! 💚</h3>
-                                <p>Hoy te sientes <strong>{{ emocionCheckin.label }}</strong></p>
-                                <Link href="/mis-emociones" class="cd-btn">
-                                    Ver mi dashboard emocional →
-                                </Link>
-                            </div>
-
-                        </Transition>
+                            <ul class="guia-list">
+                                <li><span class="guia-emoji">📊</span> Registra tus emociones diariamente</li>
+                                <li><span class="guia-emoji">💬</span> Habla con Hearty, tu guía emocional 24/7</li>
+                                <li><span class="guia-emoji">🌿</span> Explora técnicas de bienestar personalizadas</li>
+                                <li><span class="guia-emoji">👥</span> Únete a la comunidad anónima</li>
+                                <li><span class="guia-emoji">📚</span> Lee artículos y consejos expertos</li>
+                                <li><span class="guia-emoji">🎯</span> Completa retos para construir hábitos</li>
+                            </ul>
+                        </div>
                     </div>
 
                 </div>
             </section>
 
             <!-- ══════════════════════════════════════
-                 ACCESOS CONTEXTUALES
+                 QUÉ HACER AHORA
             ══════════════════════════════════════ -->
             <section class="block">
                 <div class="block-head">
-                    <h2><span class="bh-icon-emoji">{{ ctxTitle.icon }}</span> {{ ctxTitle.texto }}</h2>
+                    <h2><span class="bh-icon-emoji">{{ ctxTitle.icon }}</span> Qué hacer ahora</h2>
                     <span class="block-badge">Personalizado · {{ horaFormateada }}</span>
                 </div>
                 <div class="ctx-grid">
@@ -313,11 +294,11 @@ const hacerCheckin = (emocion) => {
             </section>
 
             <!-- ══════════════════════════════════════
-                 SECCIONES PRINCIPALES
+                 EXPLORA LAS SECCIONES
             ══════════════════════════════════════ -->
             <section class="block">
                 <div class="block-head">
-                    <h2><span class="bh-icon-emoji">🗺️</span> Tu espacio de bienestar</h2>
+                    <h2><span class="bh-icon-emoji">🗺️</span> Explora las secciones</h2>
                 </div>
                 <div class="secciones-grid">
                     <Link
@@ -338,11 +319,11 @@ const hacerCheckin = (emocion) => {
             </section>
 
             <!-- ══════════════════════════════════════
-                 TÉCNICAS
+                 TÉCNICAS DISPONIBLES
             ══════════════════════════════════════ -->
             <section class="block">
                 <div class="block-head">
-                    <h2><span class="bh-icon-emoji">🌿</span> Técnicas de bienestar</h2>
+                    <h2><span class="bh-icon-emoji">🌿</span> Técnicas disponibles</h2>
                     <span class="block-count">{{ tecnicas.length }} disponibles</span>
                 </div>
                 <div class="tec-grid">
@@ -392,7 +373,7 @@ const hacerCheckin = (emocion) => {
     padding: 0 1.5rem 5rem;
     display: flex;
     flex-direction: column;
-    gap: 2.5rem;
+    gap: 4rem;
 }
 
 /* ═══════════════════════════════════════
@@ -573,7 +554,7 @@ const hacerCheckin = (emocion) => {
 /* ── Hero: columna derecha ── */
 .hero-right { animation: su 0.6s ease 0.18s both; }
 
-.checkin-card {
+.guia-card {
     background: rgba(255,255,255,0.9);
     backdrop-filter: blur(18px);
     border-radius: 22px;
@@ -584,12 +565,12 @@ const hacerCheckin = (emocion) => {
     gap: 1.1rem;
 }
 
-.ci-head {
+.guia-head {
     display: flex;
     align-items: center;
     gap: 0.9rem;
 }
-.ci-head-icon {
+.guia-icon {
     width: 48px; height: 48px;
     background: linear-gradient(135deg, #E8FAF9, #c8f5ef);
     border-radius: 14px;
@@ -599,90 +580,26 @@ const hacerCheckin = (emocion) => {
     font-size: 1.5rem;
     flex-shrink: 0;
 }
-.ci-head h3 { font-size: 0.97rem; font-weight: 800; margin: 0; color: #1a1a1a; }
-.ci-head p  { font-size: 0.78rem; color: #999; margin: 0; }
+.guia-head h3 { font-size: 0.97rem; font-weight: 800; margin: 0; color: #1a1a1a; }
+.guia-head p  { font-size: 0.78rem; color: #999; margin: 0; }
 
-.ci-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.55rem;
-}
-.ci-btn {
+.guia-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.8rem 0.25rem;
-    border: 2px solid #f0f0f0;
-    border-radius: 14px;
-    background: white;
-    cursor: pointer;
-    font-family: inherit;
-    transition: border-color 0.18s, background 0.18s, transform 0.18s, box-shadow 0.18s;
+    gap: 0.8rem;
 }
-.ci-btn:hover {
-    border-color: #4ECDC4;
-    background: #f0fefc;
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 6px 18px rgba(78,205,196,0.22);
-}
-.ci-btn.selected {
-    border-color: #4ECDC4;
-    background: #E8FAF9;
-    transform: scale(1.06);
-    box-shadow: 0 4px 14px rgba(78,205,196,0.28);
-}
-.ci-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.ci-emoji { font-size: 1.8rem; }
-.ci-label { font-size: 0.7rem; font-weight: 700; color: #444; }
-
-.ci-hint { font-size: 0.72rem; color: #ccc; text-align: center; margin: 0; }
-
-.checkin-done {
-    background: rgba(255,255,255,0.9);
-    backdrop-filter: blur(18px);
-    border-radius: 22px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.1), 0 0 0 1px rgba(78,205,196,0.14);
-    padding: 2.5rem 1.75rem;
-    text-align: center;
+.guia-list li {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.7rem;
+    align-items: flex-start;
+    gap: 0.6rem;
+    font-size: 0.82rem;
+    color: #555;
+    line-height: 1.4;
 }
-.cd-circle {
-    width: 80px; height: 80px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #E8FAF9, #c8f5ef);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.5rem;
-    animation: pop 0.5s cubic-bezier(.34,1.56,.64,1) both;
-}
-@keyframes pop { 0%{transform:scale(0);opacity:0} 100%{transform:scale(1);opacity:1} }
-.checkin-done h3     { font-size: 1.1rem; font-weight: 800; color: #1a1a1a; margin: 0; }
-.checkin-done p      { font-size: 0.88rem; color: #666; margin: 0; }
-.checkin-done strong { color: #4ECDC4; font-weight: 800; }
-.cd-btn {
-    margin-top: 0.5rem;
-    padding: 0.7rem 1.5rem;
-    background: linear-gradient(135deg, #4ECDC4, #3BAFA7);
-    color: white;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    text-decoration: none;
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 4px 14px rgba(78,205,196,0.32);
-}
-.cd-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(78,205,196,0.42); }
-
-/* Transición check-in */
-.ci-flip-enter-active { transition: all 0.45s cubic-bezier(.34,1.56,.64,1); }
-.ci-flip-leave-active { transition: all 0.2s ease; }
-.ci-flip-enter-from  { opacity: 0; transform: scale(0.92) translateY(12px); }
-.ci-flip-leave-to    { opacity: 0; transform: scale(1.03); }
+.guia-emoji { font-size: 1.1rem; flex-shrink: 0; }
 
 /* ═══════════════════════════════════════
    BLOQUES DE SECCIÓN
