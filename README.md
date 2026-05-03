@@ -1,58 +1,168 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Heart to Heart 💚
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Plataforma web de bienestar emocional y salud mental desarrollada como Trabajo de Fin de Grado (TFG) del Grado Superior en Desarrollo de Aplicaciones Web.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Descripción
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Heart to Heart es una aplicación web pensada para acompañar a las personas en su camino hacia el bienestar emocional. Ofrece:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Hearty** — Asistente de IA empático disponible 24/7
+- **Comunidad** — Foro de apoyo entre usuarios (con moderación de contenido)
+- **Técnicas de bienestar** — Respiración, meditación, yoga, journaling y más
+- **Dashboard emocional** — Seguimiento del estado de ánimo a lo largo del tiempo
+- **Retos y plan de bienestar** — Objetivos personalizados semanales
+- **Modo Focus** — Sesiones de concentración con temporizador Pomodoro
+- **SOS** — Recursos de crisis y línea de emergencias (024)
+- **Diario personal** — Espacio privado de reflexión
+- **Biblioteca de recursos** — Artículos y guías de salud mental
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Stack tecnológico
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| Capa | Tecnología |
+|------|-----------|
+| Backend | Laravel 13 (PHP 8.3) |
+| Frontend | Vue 3 + Inertia.js |
+| Estilos | CSS personalizado + Tailwind CSS |
+| Build | Vite 8 |
+| Base de datos | SQLite |
+| Autenticación | Laravel Breeze |
+| Despliegue | Docker + Fly.io |
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+---
 
-## Agentic Development
+## Instalación local
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### Requisitos previos
+- PHP 8.3+
+- Composer 2
+- Node.js 20+
+- npm
+
+### Pasos
 
 ```bash
-composer require laravel/boost --dev
+# 1. Clonar el repositorio
+git clone https://github.com/tu-usuario/heart-to-heart.git
+cd heart-to-heart
 
-php artisan boost:install
+# 2. Instalar dependencias PHP
+composer install
+
+# 3. Instalar dependencias Node
+npm install
+
+# 4. Configurar el entorno
+cp .env.example .env
+php artisan key:generate
+
+# 5. Crear la base de datos y ejecutar migraciones
+touch database/database.sqlite
+php artisan migrate
+
+# 6. Compilar assets
+npm run dev
+
+# 7. Arrancar el servidor de desarrollo
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+La app estará disponible en `http://localhost:8000`.
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Despliegue en producción (Fly.io)
 
-## Code of Conduct
+### Requisitos
+- Cuenta en [fly.io](https://fly.io) (requiere tarjeta, pero el tier gratuito no cobra)
+- [flyctl](https://fly.io/docs/flyctl/install/) instalado
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Primera vez
 
-## Security Vulnerabilities
+```bash
+# 1. Iniciar sesión
+fly auth login
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# 2. Crear la app (elige un nombre único)
+fly apps create heart-to-heart-marco
 
-## License
+# 3. Editar fly.toml: reemplaza "heart-to-heart-app" por tu nombre de app
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# 4. Crear volumen persistente para la base de datos
+fly volumes create heart_data --region mad --size 1
+
+# 5. Configurar variables secretas
+fly secrets set APP_KEY=$(php artisan key:generate --show)
+fly secrets set APP_NAME="Heart to Heart"
+fly secrets set MAIL_MAILER=resend
+fly secrets set MAIL_HOST=smtp.resend.com
+fly secrets set MAIL_PORT=465
+fly secrets set MAIL_USERNAME=resend
+fly secrets set MAIL_PASSWORD=tu_api_key_de_resend
+fly secrets set MAIL_FROM_ADDRESS=noreply@tudominio.com
+
+# 6. Desplegar
+fly deploy
+
+# 7. Abrir la app
+fly open
+```
+
+### Redesplegar tras cambios
+
+```bash
+git add .
+git commit -m "descripción del cambio"
+fly deploy
+```
+
+### Email en producción
+
+Se recomienda [Resend](https://resend.com) — gratuito hasta 3.000 emails/mes:
+1. Crea cuenta en resend.com
+2. Genera un API Key
+3. Úsalo como `MAIL_PASSWORD` en el comando `fly secrets set`
+
+---
+
+## Variables de entorno principales
+
+| Variable | Descripción |
+|----------|-------------|
+| `APP_KEY` | Clave de cifrado (generada con `php artisan key:generate`) |
+| `APP_URL` | URL pública de la app |
+| `DB_DATABASE` | Ruta al fichero SQLite |
+| `MAIL_*` | Configuración del servidor de correo |
+
+---
+
+## Estructura del proyecto
+
+```
+heart-to-heart/
+├── app/
+│   ├── Http/Controllers/     # Controladores (Forum, Hearty, Emotions...)
+│   ├── Models/               # Modelos Eloquent
+│   └── Rules/                # Reglas de validación personalizadas
+├── database/
+│   └── migrations/           # Migraciones de base de datos
+├── resources/
+│   └── js/
+│       └── Pages/            # Componentes Vue por sección (~50 páginas)
+├── routes/
+│   └── web.php               # Definición de rutas
+├── public/
+│   └── images/               # Imágenes estáticas (logo, etc.)
+├── Dockerfile                # Imagen Docker para producción
+├── fly.toml                  # Configuración de Fly.io
+└── .env.example              # Variables de entorno de ejemplo
+```
+
+---
+
+## Autor
+
+Marcos — TFG DAW · 2026
