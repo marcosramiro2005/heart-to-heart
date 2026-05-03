@@ -224,11 +224,6 @@ onUnmounted(() => {
         <AppFooter />
         <AchievementToast />
 
-        <!-- Botón SOS flotante -->
-        <Link href="/sos" class="btn-sos-flotante" title="Modo emergencia emocional">
-            SOS
-        </Link>
-
     </div>
 </template>
 

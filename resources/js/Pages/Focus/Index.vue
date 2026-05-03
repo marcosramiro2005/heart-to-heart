@@ -28,56 +28,36 @@ const musicaOptions = [
     { id: 'lluvia',  nombre: 'Lluvia suave',   emoji: '🌧️' },
     { id: 'bosque',  nombre: 'Bosque',          emoji: '🌲' },
     { id: 'cafe',    nombre: 'Cafetería',        emoji: '☕' },
-    { id: 'blanco',  nombre: 'Ruido blanco',     emoji: '〰️' },
     { id: 'ninguno', nombre: 'Sin música',       emoji: '🔇' },
 ]
 
+let audioElement = null
+
 const crearAudio = (tipo) => {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)()
-    if (audioCtx.state === 'suspended') audioCtx.resume()
     detenerAudio()
 
-    if (tipo === 'ninguno') return
+    if (tipo === 'ninguno' || !tipo) return
 
-    const bufSize   = 4096
-    const processor = audioCtx.createScriptProcessor(bufSize, 1, 1)
-    const filter    = audioCtx.createBiquadFilter()
-    const gain      = audioCtx.createGain()
-
-    const cfgs = {
-        lluvia: { freq: 200,  Q: 0.3, tipo: 'lowpass',  lfoF: 0.1,  lfoG: 0.07, vol: 0.07 },
-        bosque: { freq: 800,  Q: 1.5, tipo: 'bandpass', lfoF: 0.6,  lfoG: 0.04, vol: 0.06 },
-        cafe:   { freq: 1800, Q: 0.7, tipo: 'bandpass', lfoF: 0.3,  lfoG: 0.03, vol: 0.05 },
-        blanco: { freq: 2000, Q: 0.1, tipo: 'highpass', lfoF: 0.05, lfoG: 0.02, vol: 0.04 },
+    const urls = {
+        lluvia: '/sounds/lluvia.mp3',
+        bosque: '/sounds/bosque.mp3',
+        cafe:   '/sounds/cafe.mp3',
     }
 
-    const cfg = cfgs[tipo] ?? cfgs.lluvia
-    filter.type            = cfg.tipo
-    filter.frequency.value = cfg.freq
-    filter.Q.value         = cfg.Q
-    gain.gain.value        = cfg.vol
+    const url = urls[tipo]
+    if (!url) return
 
-    processor.onaudioprocess = (e) => {
-        const out = e.outputBuffer.getChannelData(0)
-        for (let i = 0; i < bufSize; i++) out[i] = Math.random() * 2 - 1
-    }
-
-    const lfo = audioCtx.createOscillator()
-    const lfoGain = audioCtx.createGain()
-    lfo.frequency.value = cfg.lfoF
-    lfoGain.gain.value  = cfg.lfoG
-    lfo.connect(lfoGain)
-    lfoGain.connect(gain.gain)
-    lfo.start()
-
-    processor.connect(filter)
-    filter.connect(gain)
-    gain.connect(audioCtx.destination)
-
-    nodoMusica = { processor, filter, gain, lfo, lfoGain }
+    audioElement = new Audio(url)
+    audioElement.loop = true
+    audioElement.volume = 0.08
+    audioElement.play().catch(() => {})
 }
 
 const detenerAudio = () => {
+    if (audioElement) {
+        audioElement.pause()
+        audioElement = null
+    }
     if (!nodoMusica) return
     try {
         nodoMusica.processor.disconnect()

@@ -11,7 +11,7 @@ const visualizaciones = [
         color: '#d0eaf8',
         colorAcento: '#3B8BD4',
         descripcion: 'Deja que las olas te lleven a un estado de calma profunda.',
-        audio: { frecuencia: 220, Q: 0.3, tipo: 'lowpass', lfoFreq: 0.1, lfoGain: 0.14 },
+        audio: { url: '/sounds/olas.mp3' },
         guia: [
             { texto: 'Cierra los ojos. Voy a acompañarte en este viaje. Respira profundo tres veces, soltando la tensión en cada exhalación.', pausa: 5000 },
             { texto: 'Imagina que estás en una playa tranquila. El sol de la tarde calienta suavemente tu piel.', pausa: 4000 },
@@ -33,7 +33,7 @@ const visualizaciones = [
         color: '#d4edda',
         colorAcento: '#2d8a4e',
         descripcion: 'Conéctate con la energía tranquilizadora de la naturaleza.',
-        audio: { frecuencia: 800, Q: 1.5, tipo: 'bandpass', lfoFreq: 0.6, lfoGain: 0.04 },
+        audio: { url: '/sounds/bosque.mp3' },
         guia: [
             { texto: 'Cierra los ojos y deja que tu cuerpo se relaje completamente. Estoy aquí contigo.', pausa: 5000 },
             { texto: 'Imagina que estás al inicio de un sendero en un bosque antiguo. La luz del sol se filtra entre las hojas creando destellos dorados.', pausa: 5000 },
@@ -55,7 +55,7 @@ const visualizaciones = [
         color: '#e8d5f5',
         colorAcento: '#7a4da8',
         descripcion: 'Gana perspectiva y claridad desde lo alto.',
-        audio: { frecuencia: 400, Q: 0.8, tipo: 'bandpass', lfoFreq: 0.25, lfoGain: 0.05 },
+        audio: { url: '/sounds/noche.mp3' },
         guia: [
             { texto: 'Cierra los ojos. Respira hondo y suéltalo todo. No hay nada que resolver ahora mismo.', pausa: 5000 },
             { texto: 'Imagina que estás en la cima de una montaña hermosa. El camino hasta aquí fue largo, pero lo lograste.', pausa: 5000 },
@@ -78,7 +78,25 @@ const textoActual   = ref('')
 const vozDisponible = ref(!!window.speechSynthesis)
 let audioCtx        = null
 let nodoActual      = null
+let audioElement    = null
 let cancelado       = false
+
+const detenerAudio = () => {
+    if (audioElement) {
+        audioElement.pause()
+        audioElement = null
+    }
+    if (!nodoActual) return
+    try {
+        nodoActual.processor.disconnect()
+        nodoActual.filter.disconnect()
+        nodoActual.gain.disconnect()
+        nodoActual.lfo.stop()
+        nodoActual.lfo.disconnect()
+        nodoActual.lfoGain.disconnect()
+    } catch (e) {}
+    nodoActual = null
+}
 
 // ── Cargar voces disponibles ──
 const cargarMejorVoz = () => {
@@ -133,6 +151,16 @@ const hablar = (texto, onFin) => {
 
 // ── Web Audio API (ambiente) ──
 const crearAudio = (cfg) => {
+    detenerAudio()
+
+    if (cfg?.url) {
+        audioElement = new Audio(cfg.url)
+        audioElement.loop = true
+        audioElement.volume = 0.06
+        audioElement.play().catch(() => {})
+        return
+    }
+
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)()
     if (audioCtx.state === 'suspended') audioCtx.resume()
 
@@ -164,19 +192,6 @@ const crearAudio = (cfg) => {
     gain.connect(audioCtx.destination)
 
     nodoActual = { processor, filter, gain, lfo, lfoGain }
-}
-
-const detenerAudio = () => {
-    if (!nodoActual) return
-    try {
-        nodoActual.processor.disconnect()
-        nodoActual.filter.disconnect()
-        nodoActual.gain.disconnect()
-        nodoActual.lfo.stop()
-        nodoActual.lfo.disconnect()
-        nodoActual.lfoGain.disconnect()
-    } catch (e) {}
-    nodoActual = null
 }
 
 // ── Flujo principal ──

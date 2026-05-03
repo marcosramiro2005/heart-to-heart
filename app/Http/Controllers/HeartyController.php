@@ -125,6 +125,7 @@ class HeartyController extends Controller
         $request->validate([
             'mensaje'        => 'required|string|max:500',
             'pregunta_actual'=> 'nullable|string',
+            'flow_answers'   => 'nullable|array',
         ]);
 
         $userId = auth()->id();
@@ -144,10 +145,11 @@ class HeartyController extends Controller
             $response = Http::timeout(10)
                 ->withHeaders(['Content-Type' => 'application/json'])
                 ->post("{$this->chatbotUrl}/chat", [
-                    'mensaje'        => $request->mensaje,
-                    'pregunta_actual'=> $request->pregunta_actual ?? 'bienvenida',
-                    'historial'      => $historialEmociones,
-                    'contexto'       => [],
+                    'mensaje'         => $request->mensaje,
+                    'pregunta_actual' => $request->pregunta_actual ?? null,
+                    'flow_answers'    => $request->input('flow_answers', []),
+                    'historial'       => $historialEmociones,
+                    'contexto'        => [],
                 ]);
 
             if (!$response->successful()) {

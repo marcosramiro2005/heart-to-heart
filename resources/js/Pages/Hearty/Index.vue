@@ -4,10 +4,10 @@ import { ref, nextTick, onMounted, computed } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
 import axios from 'axios'
 
-const page   = usePage()
-const user   = computed(() => page.props.auth?.user)
-const nombre = computed(() => user.value?.name ?? '')
-const avatar = computed(() => user.value?.avatar ?? '👤')
+const page            = usePage()
+const user            = computed(() => page.props.auth?.user)
+const nombre          = computed(() => user.value?.name ?? '')
+const avatar          = computed(() => user.value?.avatar ?? '👤')
 
 const mensajes        = ref([])
 const input           = ref('')
@@ -17,6 +17,8 @@ const emocionActual   = ref(null)
 const tecnicasActivas = ref([])
 const iniciado        = ref(false)
 const opcionesRapidas = ref([])
+const preguntaActual  = ref(null)
+const flowAnswers     = ref({})
 
 const colorEmocion = computed(() => ({
     ansiedad:  { bg: '#d0eaf8', text: '#1a6fa8', border: '#3B8BD4' },
@@ -51,13 +53,18 @@ const agregarMensaje = (sender, texto, tecnicas = [], emocion = null) => {
 const iniciarChat = async () => {
     iniciado.value = true
     cargando.value = true
+    preguntaActual.value = null
+    flowAnswers.value = {}
+
     try {
         const res = await axios.get(`http://127.0.0.1:5000/inicio?nombre=${encodeURIComponent(nombre.value)}&sesiones=0`)
         agregarMensaje('hearty', res.data.mensaje)
         opcionesRapidas.value = res.data.opciones ?? []
+        preguntaActual.value = res.data.pregunta_id ?? 'bienvenida'
     } catch (e) {
         agregarMensaje('hearty', `¡Hola${nombre.value ? ', ' + nombre.value.split(' ')[0] : ''}! Soy Hearty 💚 Estoy aquí para escucharte. ¿Cómo te sientes hoy?`)
-        opcionesRapidas.value = ['😊 Bien', '😌 Tranquilo/a', '😰 Ansioso/a', '😢 Triste', '😠 Enfadado/a', '😴 Cansado/a']
+        opcionesRapidas.value = ['😊 Bien', '😌 Tranquilo/a', '😰 Ansioso/a', '😢 Triste', '😠 Enfadado/a', '😴 Cansado/a', '😤 Estresado/a', '😔 Solo/a']
+        preguntaActual.value = 'bienvenida'
     } finally {
         cargando.value = false
     }
@@ -66,6 +73,13 @@ const iniciarChat = async () => {
 const enviar = async (textoDirecto = null) => {
     const texto = textoDirecto || input.value.trim()
     if (!texto || cargando.value) return
+
+    if (preguntaActual.value) {
+        flowAnswers.value = {
+            ...flowAnswers.value,
+            [preguntaActual.value]: texto,
+        }
+    }
 
     input.value           = ''
     opcionesRapidas.value = []
@@ -83,6 +97,8 @@ const enviar = async (textoDirecto = null) => {
             nombre:         nombre.value,
             historial_chat: historialParaEnviar,
             sesiones:       0,
+            pregunta_actual: preguntaActual.value,
+            flow_answers:   flowAnswers.value,
         })
 
         const data = res.data
@@ -97,12 +113,14 @@ const enviar = async (textoDirecto = null) => {
 
         agregarMensaje('hearty', data.respuesta, data.tecnicas_sugeridas, data.emocion_detectada)
 
+        preguntaActual.value = data.pregunta_actual ?? null
+        opcionesRapidas.value = data.opciones ?? []
+
         if (data.frase_motivacional && !data.es_crisis) {
             setTimeout(() => {
                 agregarMensaje('hearty', `✨ ${data.frase_motivacional}`)
             }, 1200)
         }
-
     } catch (e) {
         agregarMensaje('hearty', 'Lo siento, algo ha fallado. Por favor inténtalo de nuevo 💙')
     } finally {
@@ -114,6 +132,8 @@ const limpiarChat = () => {
     mensajes.value        = []
     emocionActual.value   = null
     tecnicasActivas.value = []
+    preguntaActual.value  = null
+    flowAnswers.value     = {}
     iniciado.value        = false
     setTimeout(iniciarChat, 100)
 }

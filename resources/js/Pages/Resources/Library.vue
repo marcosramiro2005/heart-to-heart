@@ -29,8 +29,6 @@ const tipos = [
     { id: 'todos',    label: 'Todos los tipos' },
     { id: 'article',  label: '📄 Artículos' },
     { id: 'exercise', label: '🧘 Ejercicios' },
-    { id: 'video',    label: '🎥 Vídeos' },
-    { id: 'podcast',  label: '🎙️ Podcasts' },
 ]
 
 const busqueda   = ref(props.busqueda || '')

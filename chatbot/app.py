@@ -134,6 +134,165 @@ EMOCIONES = {
         "tecnicas": [],
     },
 }
+FLUJO_PREGUNTAS = [
+    {
+        "id": "bienvenida",
+        "mensaje": "¡Hola! Soy Hearty, tu guía emocional 💚 Estoy aquí para acompañarte. ¿Cómo te sientes hoy?",
+        "opciones": ["😊 Bien", "😌 Tranquilo/a", "😰 Ansioso/a", "😢 Triste", "😠 Enfadado/a", "😴 Cansado/a", "😤 Estresado/a", "😔 Solo/a"],
+        "siguiente": "profundizar",
+    },
+    {
+        "id": "profundizar",
+        "mensaje": "Gracias por contármelo. ¿Hace cuánto tiempo te sientes así?",
+        "opciones": ["Hoy solamente", "Unos días", "Varias semanas", "Hace mucho tiempo"],
+        "siguiente": "causa",
+    },
+    {
+        "id": "causa",
+        "mensaje": "Entiendo. ¿Crees que hay algo concreto que esté influyendo en cómo te sientes?",
+        "opciones": ["El trabajo o estudios", "Mis relaciones personales", "Mi salud", "No lo sé", "Varias cosas a la vez"],
+        "siguiente": "apoyo",
+    },
+    {
+        "id": "apoyo",
+        "mensaje": "¿Qué tipo de apoyo te vendría mejor ahora mismo?",
+        "opciones": ["Técnicas para calmarme", "Recursos informativos", "Solo quiero desahogarme", "Consejos prácticos"],
+        "siguiente": "final",
+    },
+]
+
+RESPUESTA_EMOCION_MAP = {
+    "😊 bien": "alegria",
+    "😌 tranquilo": "alegria",
+    "😰 ansioso": "ansiedad",
+    "😢 triste": "tristeza",
+    "😠 enfadado": "enfado",
+    "😴 cansado": "cansancio",
+    "😤 estresado": "estres",
+    "😔 solo": "soledad",
+}
+
+
+def get_pregunta_por_id(pregunta_id):
+    return next((p for p in FLUJO_PREGUNTAS if p["id"] == pregunta_id), None)
+
+
+def inferir_emocion_por_opcion(texto):
+    if not texto:
+        return None
+    t = texto.lower()
+    for termino, emocion in RESPUESTA_EMOCION_MAP.items():
+        if termino in t:
+            return emocion
+    if "tranquil" in t or "bien" in t:
+        return "alegria"
+    if "ansios" in t or "ansiedad" in t or "ansioso" in t:
+        return "ansiedad"
+    if "triste" in t:
+        return "tristeza"
+    if "enfad" in t or "ira" in t:
+        return "enfado"
+    if "cansad" in t:
+        return "cansancio"
+    if "estres" in t or "estrés" in t:
+        return "estres"
+    if "solo" in t or "soledad" in t:
+        return "soledad"
+    return detectar_emocion(texto)
+
+
+def generar_resumen_final(flow_answers, nombre):
+    n = _n(nombre)
+    emocion = inferir_emocion_por_opcion(flow_answers.get("bienvenida", ""))
+    if not emocion:
+        emocion = detectar_emocion(" ".join(flow_answers.values()) or "")
+
+    apoyo = flow_answers.get("apoyo", "")
+    cuando = flow_answers.get("profundizar", "")
+    cause = flow_answers.get("causa", "")
+
+    descripcion = {
+        "ansiedad": "ansioso/a, con la mente acelerada y la sensación de que algo puede salir mal",
+        "tristeza": "triste, como si te pesara el corazón y te costara encontrar ánimo",
+        "estres": "estresado/a, con demasiadas responsabilidades y sensación de no llegar",
+        "cansancio": "agotado/a, con poco impulso y falta de energía para lo cotidiano",
+        "enfado": "enfadado/a, con mucha tensión y ganas de soltar lo que te molesta",
+        "soledad": "solo/a, desconectado/a y con ganas de comprensión",
+        "alegria": "bien, con una sensación de calma o felicidad que te acompaña",
+    }.get(emocion, "como estás ahora mismo")
+
+    texto = f"Gracias por responder{n}. Veo que te sientes {descripcion}."
+    if cuando:
+        texto += f" Lo notas desde {cuando.lower()}."
+    if cause:
+        texto += f" Parece que está vinculado a {cause.lower()}."
+
+    if apoyo == "Técnicas para calmarme":
+        texto += " Te recomiendo empezar con ejercicios prácticos de regulación como la respiración, el grounding o la relajación muscular."
+    elif apoyo == "Recursos informativos":
+        texto += " Buscar información y entender mejor lo que te pasa puede ayudarte a sentir más control."
+    elif apoyo == "Solo quiero desahogarme":
+        texto += " A veces lo mejor es dejar salir lo que llevas dentro y no forzarte a solucionar nada aún."
+    elif apoyo == "Consejos prácticos":
+        texto += " Un pequeño paso concreto hoy puede marcar la diferencia: prioriza una cosa y hazla sin juzgarte."
+    else:
+        texto += " Estoy aquí para ayudarte a cuidar de ti paso a paso."
+
+    if emocion == "alegria":
+        texto = f"Gracias por compartir{n}. Me alegra saber que te sientes bien. Aprovecha este momento para reforzar las buenas rutinas y seguir cuidándote."
+        tecnicas = [
+            {"nombre": "📓 Diario de gratitud", "ruta": "/diario", "por_que": "Anotar lo positivo ayuda a que esos momentos buenos duren más."},
+            {"nombre": "🌿 Paseo consciente", "ruta": "/ejercicio", "por_que": "Aprovecha la energía positiva para conectar con el presente."},
+        ]
+    else:
+        tecnicas = EMOCIONES.get(emocion, {}).get("tecnicas", [])[:3]
+        if not tecnicas:
+            tecnicas = [
+                {"nombre": "💆 Autocuidado sencillo", "ruta": "/autocompasion", "por_que": "Cuidarte con pequeños gestos ayuda a recuperar estabilidad emocional."},
+                {"nombre": "📝 Escribir lo que sientes", "ruta": "/diario", "por_que": "Sacar en palabras lo que te pasa reduce la carga mental."},
+            ]
+
+    return texto, emocion, tecnicas
+
+
+def procesar_flujo_preguntas(pregunta_actual, respuesta, flow_answers, nombre):
+    if not pregunta_actual:
+        return None
+
+    pregunta = get_pregunta_por_id(pregunta_actual)
+    if not pregunta:
+        return None
+
+    flujo = dict(flow_answers or {})
+    flujo[pregunta_actual] = respuesta
+    siguiente_id = pregunta.get("siguiente")
+
+    if siguiente_id == "final":
+        resumen, emocion, tecnicas = generar_resumen_final(flujo, nombre)
+        return {
+            "respuesta": resumen,
+            "emocion_detectada": emocion,
+            "es_crisis": False,
+            "tecnicas_sugeridas": tecnicas,
+            "frase_motivacional": None,
+            "opciones": [],
+            "pregunta_actual": None,
+        }
+
+    siguiente = get_pregunta_por_id(siguiente_id)
+    if not siguiente:
+        return None
+
+    emocion_detectada = inferir_emocion_por_opcion(flujo.get("bienvenida", ""))
+    return {
+        "respuesta": siguiente["mensaje"].format(nombre=_n(nombre)),
+        "emocion_detectada": emocion_detectada,
+        "es_crisis": False,
+        "tecnicas_sugeridas": [],
+        "frase_motivacional": None,
+        "opciones": siguiente["opciones"],
+        "pregunta_actual": siguiente_id,
+    }
 
 # ── Banco de respuestas ────────────────────────────────────────────────────────
 RESPUESTAS = {
@@ -703,6 +862,7 @@ def inicio():
             "😊 Bien", "😌 Tranquilo/a", "😰 Ansioso/a", "😢 Triste",
             "😠 Enfadado/a", "😴 Cansado/a", "😤 Estresado/a", "😔 Solo/a",
         ],
+        "pregunta_id": "bienvenida",
     })
 
 
@@ -716,11 +876,18 @@ def chat():
     nombre = data.get("nombre", "")
     historial_chat = data.get("historial_chat", [])
     sesiones = data.get("sesiones", 0)
+    pregunta_actual = data.get("pregunta_actual")
+    flow_answers = data.get("flow_answers", {})
 
     if not mensaje:
         return jsonify({"error": "Mensaje vacío"}), 400
 
     print(f"💬 [{nombre}] {mensaje[:80]}")
+
+    if pregunta_actual:
+        resultado = procesar_flujo_preguntas(pregunta_actual, mensaje, flow_answers, nombre)
+        if resultado:
+            return jsonify(resultado)
 
     emocion = detectar_emocion(mensaje)
     resultado = construir_respuesta(mensaje, emocion, nombre, historial_chat, sesiones)
