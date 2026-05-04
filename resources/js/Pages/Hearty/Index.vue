@@ -57,7 +57,7 @@ const iniciarChat = async () => {
     flowAnswers.value = {}
 
     try {
-        const res = await axios.get(`http://127.0.0.1:5000/inicio?nombre=${encodeURIComponent(nombre.value)}&sesiones=0`)
+        const res = await axios.get(`/hearty/inicio?nombre=${encodeURIComponent(nombre.value)}&sesiones=0`)
         agregarMensaje('hearty', res.data.mensaje)
         opcionesRapidas.value = res.data.opciones ?? []
         preguntaActual.value = res.data.pregunta_id ?? 'bienvenida'
@@ -92,7 +92,7 @@ const enviar = async (textoDirecto = null) => {
             texto:  m.texto,
         }))
 
-        const res = await axios.post('http://127.0.0.1:5000/chat', {
+        const res = await axios.post('/hearty/chat', {
             mensaje:        texto,
             nombre:         nombre.value,
             historial_chat: historialParaEnviar,

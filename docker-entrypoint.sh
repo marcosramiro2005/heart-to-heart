@@ -2,9 +2,15 @@
 set -e
 
 # Crear el fichero SQLite si no existe (primera vez o volumen vacío)
-if [ ! -f /var/www/html/database/database.sqlite ]; then
-    touch /var/www/html/database/database.sqlite
-    chown www-data:www-data /var/www/html/database/database.sqlite
+# El volumen se monta como root — dar permisos a www-data
+mkdir -p /data
+chown -R www-data:www-data /data
+chmod -R 775 /data
+
+if [ ! -f /data/database.sqlite ]; then
+    touch /data/database.sqlite
+    chown www-data:www-data /data/database.sqlite
+    chmod 664 /data/database.sqlite
 fi
 
 # Enlace simbólico del storage público (para avatares y archivos subidos)

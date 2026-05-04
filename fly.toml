@@ -2,7 +2,7 @@
 # Documentación: https://fly.io/docs/reference/configuration/
 
 app = "heart-to-heart-marcos"   # CAMBIA ESTO: debe ser único en Fly.io (ej: heart-to-heart-marco)
-primary_region = "mad"        # Madrid — servidor más cercano a España
+primary_region = "ams"        # Amsterdam — servidor más cercano a España disponible
 
 [build]
 
@@ -12,7 +12,7 @@ primary_region = "mad"        # Madrid — servidor más cercano a España
   APP_URL    = "https://heart-to-heart-marcos.fly.dev"
   LOG_LEVEL  = "error"
   DB_CONNECTION = "sqlite"
-  DB_DATABASE   = "/var/www/html/database/database.sqlite"
+  DB_DATABASE   = "/data/database.sqlite"
   SESSION_DRIVER  = "database"
   CACHE_STORE     = "database"
   QUEUE_CONNECTION = "database"
@@ -33,5 +33,5 @@ primary_region = "mad"        # Madrid — servidor más cercano a España
 # al redesplegar la app
 [[mounts]]
   source      = "heart_data"
-  destination = "/var/www/html/database"
+  destination = "/data"
   initial_size = "1gb"

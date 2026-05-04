@@ -175,7 +175,7 @@ onUnmounted(() => {
                     </div>
 
                     <!-- Hamburguesa móvil -->
-                    <button class="hamburger" @click.stop="menuMovilAbierto = !menuMovilAbierto; cerrarTodo()">
+                    <button class="hamburger" @click.stop="menuMovilAbierto = !menuMovilAbierto; dropdownAbierto = false; tecnicasAbierto = false">
                         <span :class="{ open: menuMovilAbierto }"></span>
                         <span :class="{ open: menuMovilAbierto }"></span>
                         <span :class="{ open: menuMovilAbierto }"></span>
@@ -405,6 +405,7 @@ onUnmounted(() => {
     align-items: center;
     gap: 0.5rem;
     flex-shrink: 0;
+    margin-left: auto;
 }
 
 /* ── Botón SOS navbar ── */
@@ -651,6 +652,7 @@ onUnmounted(() => {
     .nav-links  { display: none; }
     .hamburger  { display: flex; }
     .nav-sos    { display: none; }
+    .nav-logo   { padding-right: 0; border-right: none; margin-right: 0; }
 }
 
 /* ── Botón SOS flotante: más pequeño en móvil ── */
