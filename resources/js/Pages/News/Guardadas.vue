@@ -1,12 +1,20 @@
 <script setup>
+// Página de artículos guardados por el usuario.
+// Los artículos se almacenan en saved_news (tabla local) para que sigan disponibles
+// aunque la API de noticias no esté disponible o el artículo haya caducado.
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Link } from '@inertiajs/vue3'
 import axios from 'axios'
 import { ref } from 'vue'
 
-const props = defineProps({ articulos: Array })
+const props = defineProps({ articulos: Array }) // artículos guardados del usuario (de saved_news)
+
+// Copia local reactiva para poder eliminar visualmente sin recargar la página
 const articulos = ref([...props.articulos])
 
+// Llama al mismo endpoint toggle que "guardar" — si el artículo ya existe lo elimina.
+// Tras la respuesta del servidor lo elimina también del array local (splice).
 const eliminarGuardado = async (articulo, index) => {
     await axios.post('/recursos/guardar', {
         url:         articulo.url,
@@ -18,6 +26,7 @@ const eliminarGuardado = async (articulo, index) => {
     articulos.value.splice(index, 1)
 }
 
+// Abre el artículo en nueva pestaña con noopener por seguridad
 const abrirArticulo = (url) => {
     window.open(url, '_blank', 'noopener')
 }

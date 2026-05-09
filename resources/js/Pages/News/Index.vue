@@ -1,17 +1,22 @@
 <script setup>
+// Página de noticias y recursos sobre salud mental.
+// Los artículos provienen de NewsAPI (via NewsService.php con caché de 1 hora)
+// o de artículos de fallback si la API no está disponible.
+// Permite filtrar por categoría, buscar por texto y paginar resultados.
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref } from 'vue'
 import { router, Link } from '@inertiajs/vue3'
 import axios from 'axios'
 
 const props = defineProps({
-    articulos: Array,
-    total: Number,
-    pagina: Number,
-    totalPaginas: Number,
-    categoria: String,
-    busqueda: String,
-    error: String,
+    articulos:     Array,   // artículos de la página actual (ya paginados en el servidor)
+    total:         Number,  // total de artículos encontrados
+    pagina:        Number,  // número de página actual
+    totalPaginas:  Number,  // número total de páginas
+    categoria:     String,  // categoría activa (o null para "todas")
+    busqueda:      String,  // término de búsqueda activo
+    error:         String,  // mensaje de error si NewsAPI falla (se muestra al usuario)
 })
 
 const categorias = [
@@ -24,20 +29,26 @@ const categorias = [
 ]
 
 const busqueda = ref(props.busqueda || '')
+// Copia local de los artículos para poder mutar is_saved sin recargar toda la página
 const articulosLocales = ref(props.articulos.map(a => ({ ...a })))
 
+// Cambia de categoría: preserveState: false para resetear el scroll y la paginación
 const filtrar = (cat) => {
     router.get('/recursos', { categoria: cat }, { preserveState: false })
 }
 
+// Búsqueda de texto: mantiene la categoría actual y envía el texto como query param
 const buscar = () => {
     router.get('/recursos', { categoria: props.categoria, busqueda: busqueda.value })
 }
 
+// Cambia de página manteniendo la categoría y búsqueda actuales
 const cambiarPagina = (p) => {
     router.get('/recursos', { categoria: props.categoria, busqueda: props.busqueda, pagina: p })
 }
 
+// Guarda o elimina un artículo: el endpoint es toggle (mismo endpoint para ambas acciones).
+// Actualiza is_saved localmente para que el botón cambie sin recargar la página.
 const toggleGuardar = async (articulo, index) => {
     try {
         const res = await axios.post('/recursos/guardar', {
@@ -53,6 +64,8 @@ const toggleGuardar = async (articulo, index) => {
     }
 }
 
+// Abre el artículo en una pestaña nueva. noopener impide que la nueva pestaña
+// pueda acceder a window.opener (buena práctica de seguridad)
 const abrirArticulo = (url) => {
     window.open(url, '_blank', 'noopener')
 }

@@ -1,4 +1,6 @@
 <script setup>
+// Dashboard por defecto de Laravel Breeze. No se usa en Heart to Heart
+// (Home/Index.vue es el dashboard real). Se mantiene como scaffolding.
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
 </script>

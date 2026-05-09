@@ -1,18 +1,24 @@
 <script setup>
+// Página de estadísticas personales del usuario.
+// Muestra el progreso, el nivel actual y enlaces a las secciones clave.
+// Los rangos de niveles deben coincidir con calcularNivel() en AchievementController.php.
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Link } from '@inertiajs/vue3'
 import { computed } from 'vue'
 
 const props = defineProps({
-    stats: Object,
+    stats: Object, // objeto con stats del usuario (puntos, logros, rachas, etc.)
 })
 
+// Tabla de niveles: min/max = número de logros necesarios para ese nivel.
+// Debe mantenerse sincronizada con AchievementController::calcularNivel()
 const niveles = [
-    { nombre: 'Semilla',             min: 0,  max: 0,  emoji: '🌱', color: '#d4edda' },
-    { nombre: 'Iniciado',            min: 1,  max: 2,  emoji: '🌿', color: '#d4edda' },
-    { nombre: 'Aprendiz',            min: 3,  max: 5,  emoji: '🌳', color: '#E8FAF9' },
-    { nombre: 'Explorador',          min: 6,  max: 8,  emoji: '⭐', color: '#fff9c4' },
-    { nombre: 'Experto Emocional',   min: 9,  max: 11, emoji: '💫', color: '#fce4ec' },
+    { nombre: 'Semilla',               min: 0,  max: 0,  emoji: '🌱', color: '#d4edda' },
+    { nombre: 'Iniciado',              min: 1,  max: 2,  emoji: '🌿', color: '#d4edda' },
+    { nombre: 'Aprendiz',              min: 3,  max: 5,  emoji: '🌳', color: '#E8FAF9' },
+    { nombre: 'Explorador',            min: 6,  max: 8,  emoji: '⭐', color: '#fff9c4' },
+    { nombre: 'Experto Emocional',     min: 9,  max: 11, emoji: '💫', color: '#fce4ec' },
     { nombre: 'Maestro del Bienestar', min: 12, max: 99, emoji: '🏆', color: '#ffd5d5' },
 ]
 </script>

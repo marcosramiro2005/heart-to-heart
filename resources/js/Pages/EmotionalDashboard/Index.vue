@@ -1,16 +1,25 @@
 <script setup>
+// Página del panel de emociones (Dashboard emocional).
+// Permite al usuario registrar cómo se siente e incluye:
+// - Gráfica de línea con la intensidad emocional de los últimos 30 días
+// - Gráfica de dona con la distribución de emociones
+// - Calendario del mes actual con un punto de color por cada día registrado
+// - Insights automáticos personalizados (generados por EmotionalDashboardController)
+// - Historial de los últimos 7 registros
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 
+// Todos estos props vienen del método index() de EmotionalDashboardController
 const props = defineProps({
-    graficaLinea:     Array,
-    graficaDona:      Array,
-    calendario:       Object,
-    stats:            Object,
-    insights:         Array,
-    ultimosRegistros: Array,
-    mesActual:        String,
+    graficaLinea:     Array,  // [{fecha, intensidad}] para la gráfica de línea
+    graficaDona:      Array,  // [{emocion, total}] para la gráfica de dona
+    calendario:       Object, // {YYYY-MM-DD: {emocion, intensidad, total}} del mes actual
+    stats:            Object, // total_registros, racha_actual, emocion_frecuente, etc.
+    insights:         Array,  // mensajes automáticos personalizados según el historial
+    ultimosRegistros: Array,  // últimas 7 emociones registradas
+    mesActual:        String, // formato 'YYYY-MM' para el título del calendario
 })
 
 // ── Registro de emoción ──
@@ -23,14 +32,18 @@ const emociones = [
     { id: 'cansancio', emoji: '😴', label: 'Cansancio', color: '#9B8EC4' },
 ]
 
+// Estado del formulario de registro de emoción
 const emocionSeleccionada = ref('')
-const intensidad          = ref(5)
-const nota                = ref('')
+const intensidad          = ref(5)   // valor del slider (1=muy baja, 10=muy alta)
+const nota                = ref('')  // nota opcional del usuario
 const enviando            = ref(false)
-const registrado          = ref(false)
+const registrado          = ref(false) // true durante 3 segundos tras registrar con éxito
 
+// Devuelve el color hex de la emoción seleccionada para colorear el slider dinámicamente
 const colorEmocion = (id) => emociones.find(e => e.id === id)?.color ?? '#4ECDC4'
 
+// Envía el registro de emoción al servidor mediante Inertia router.post()
+// preserveScroll: true evita que la página salte al principio tras el envío
 const registrarEmocion = () => {
     if (!emocionSeleccionada.value) return
     enviando.value = true
@@ -41,6 +54,7 @@ const registrarEmocion = () => {
     }, {
         preserveScroll: true,
         onSuccess: () => {
+            // Mostrar confirmación y limpiar el formulario
             registrado.value          = true
             emocionSeleccionada.value = ''
             intensidad.value          = 5
@@ -53,28 +67,34 @@ const registrarEmocion = () => {
     })
 }
 
-// ── Calendario ──
+// ── Calendario emocional del mes actual ──
+// Genera el array de celdas del calendario: null para días en blanco antes del día 1,
+// y números del 1 al total de días del mes. Los blancos alinean el calendario con lunes como primer día.
 const diasDelMes = computed(() => {
     const hoy    = new Date()
     const año    = hoy.getFullYear()
     const mes    = hoy.getMonth()
-    const primer = new Date(año, mes, 1).getDay()
-    const total  = new Date(año, mes + 1, 0).getDate()
+    const primer = new Date(año, mes, 1).getDay() // 0=domingo, 1=lunes...
+    const total  = new Date(año, mes + 1, 0).getDate() // último día del mes
+    // Ajustar para semana española (lunes=0): si primer=0(domingo) hay 6 blancos
     const blancos = primer === 0 ? 6 : primer - 1
     const dias = []
-    for (let i = 0; i < blancos; i++) dias.push(null)
+    for (let i = 0; i < blancos; i++) dias.push(null) // celdas vacías al inicio
     for (let d = 1; d <= total; d++) dias.push(d)
     return dias
 })
 
+// Nombre del mes y año en español para mostrar como título del calendario (ej: "mayo 2026")
 const nombreMes = computed(() => {
     return new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
 })
 
+// Devuelve los datos del calendario para un día concreto (emoción, intensidad, total de registros).
+// Construye la clave YYYY-MM-DD para buscar en el objeto calendario recibido del servidor.
 const getDiaCalendario = (dia) => {
     if (!dia) return null
-    const hoy  = new Date()
-    const key  = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`
+    const hoy = new Date()
+    const key = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`
     return props.calendario[key] ?? null
 }
 

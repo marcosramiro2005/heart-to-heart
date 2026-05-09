@@ -1,23 +1,31 @@
 <script setup>
+// Página de perfil personalizado del usuario.
+// Muestra: datos personales, estadísticas de uso, nivel actual con barra de progreso,
+// logros desbloqueados, últimas emociones registradas y resultado del último test.
+// También permite editar el perfil, cambiar contraseña y eliminar la cuenta.
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref } from 'vue'
 import { router, Link } from '@inertiajs/vue3'
 
+// Props recibidas de UserProfileController::index()
 const props = defineProps({
-    usuario:            Object,
-    stats:              Object,
-    nivel:              String,
-    infoNivel:          Object,
-    progresNivel:       Number,
-    logros:             Array,
-    emocionesRecientes: Array,
-    ultimoTest:         Object,
+    usuario:            Object, // datos del usuario: id, name, email, avatar, bio, location, creado, objetivo
+    stats:              Object, // emociones_registradas, entradas_diario, retos_completados, etc.
+    nivel:              String, // nombre del nivel actual (ej: 'Explorador')
+    infoNivel:          Object, // emoji, siguiente nivel, cuántos logros necesita para el siguiente
+    progresNivel:       Number, // porcentaje de progreso hacia el siguiente nivel (0-100)
+    logros:             Array,  // logros desbloqueados con fecha de desbloqueo
+    emocionesRecientes: Array,  // últimas 5 emociones registradas
+    ultimoTest:         Object, // puntuación, nivel y fecha del último test (null si no ha hecho ninguno)
 })
 
-const editando       = ref(false)
-const cambandoPass   = ref(false)
-const eliminando     = ref(false)
+// Controlan qué sección de edición está expandida
+const editando     = ref(false) // formulario de editar nombre, bio, avatar
+const cambandoPass = ref(false) // formulario de cambio de contraseña
+const eliminando   = ref(false) // confirmación de eliminación de cuenta
 
+// Formulario de edición de perfil inicializado con los valores actuales del usuario
 const form = ref({
     name:     props.usuario.name,
     bio:      props.usuario.bio,

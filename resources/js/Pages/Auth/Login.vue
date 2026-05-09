@@ -1,17 +1,24 @@
 <script setup>
+// Página de inicio de sesión.
+// Usa useForm de Inertia para gestionar el envío del formulario con manejo de errores
+// y limpieza automática del campo contraseña al terminar (tanto con éxito como con error).
+
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
+// useForm crea un objeto reactivo que gestiona el estado del formulario,
+// los errores de validación y el estado de carga automáticamente
 const form = useForm({
     email:    '',
     password: '',
     remember: false,
 })
 
-const mostrarPassword = ref(false)
-const page = usePage()
-const mensajeExito = page.props.flash?.success
+const mostrarPassword = ref(false) // toggle para mostrar/ocultar la contraseña
+const page            = usePage()
+const mensajeExito    = page.props.flash?.success // mensaje tras resetear contraseña con éxito
 
+// Envía las credenciales al servidor; al terminar (éxito o error) limpia el campo password
 const submit = () => {
     form.post(route('login'), {
         onFinish: () => form.reset('password'),

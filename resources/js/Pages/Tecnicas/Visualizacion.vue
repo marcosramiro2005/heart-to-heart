@@ -1,8 +1,12 @@
 <script setup>
+// Componente de Visualización Guiada
+// Este componente proporciona visualizaciones guiadas con audio
+// para ayudar a los usuarios a relajarse y reducir el estrés
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref, onUnmounted } from 'vue'
 
-const visualizaciones = [
+const visualizaciones = [ // Lista de visualizaciones disponibles con guías de audio
     {
         id: 'playa',
         titulo: 'Playa tranquila',

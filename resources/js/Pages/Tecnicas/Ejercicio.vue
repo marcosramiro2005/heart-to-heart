@@ -1,10 +1,14 @@
 <script setup>
+// Componente de Técnicas de Ejercicio Físico
+// Este componente muestra rutinas de ejercicio adaptadas a diferentes estados emocionales
+// Incluye ejercicios guiados con temporizador para calmar ansiedad, subir el ánimo o recuperar energía
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref, onUnmounted } from 'vue'
 
-const pestana = ref('rutinas')
+const pestana = ref('rutinas') // Pestaña activa: 'rutinas' o 'sesion'
 
-const rutinas = [
+const rutinas = [ // Array de rutinas de ejercicio disponibles
     {
         id: 'ansiedad',
         nombre: 'Calmar la ansiedad',
@@ -75,16 +79,16 @@ const rutinas = [
     },
 ]
 
-const rutinaActiva    = ref(null)
-const ejercicioActual = ref(0)
-const activo          = ref(false)
-const completado      = ref(false)
-const cuenta          = ref(0)
-const faseDescanso    = ref(false)
-const DESCANSO        = 15
-let intervalo         = null
+const rutinaActiva    = ref(null) // Rutina seleccionada actualmente
+const ejercicioActual = ref(0)    // Índice del ejercicio actual en la rutina
+const activo          = ref(false) // Si hay una sesión activa
+const completado      = ref(false) // Si la rutina se completó
+const cuenta          = ref(0)     // Segundos restantes en el ejercicio actual
+const faseDescanso    = ref(false) // Si está en fase de descanso entre ejercicios
+const DESCANSO        = 15         // Segundos de descanso entre ejercicios
+let intervalo         = null       // ID del intervalo para el temporizador
 
-const iniciarRutina = (rutina) => {
+const iniciarRutina = (rutina) => { // Inicia una rutina de ejercicios
     rutinaActiva.value    = rutina
     ejercicioActual.value = 0
     activo.value          = true
@@ -96,7 +100,7 @@ const iniciarRutina = (rutina) => {
     intervalo = setInterval(tick, 1000)
 }
 
-const tick = () => {
+const tick = () => { // Función llamada cada segundo para actualizar el temporizador
     cuenta.value--
     if (cuenta.value <= 0) {
         if (faseDescanso.value) {
@@ -122,7 +126,7 @@ const tick = () => {
     }
 }
 
-const detener = () => {
+const detener = () => { // Detiene la rutina actual
     clearInterval(intervalo)
     activo.value       = false
     faseDescanso.value = false
@@ -130,7 +134,7 @@ const detener = () => {
     rutinaActiva.value = null
 }
 
-const saltar = () => {
+const saltar = () => { // Salta al siguiente ejercicio
     clearInterval(intervalo)
     if (faseDescanso.value) {
         faseDescanso.value = false
@@ -155,19 +159,22 @@ const saltar = () => {
     intervalo = setInterval(tick, 1000)
 }
 
-const progresoPct = () => {
+const progresoPct = () => { // Calcula el porcentaje de progreso de la rutina
     if (!rutinaActiva.value) return 0
     return Math.round((ejercicioActual.value / rutinaActiva.value.ejercicios.length) * 100)
 }
 
-const colorNivel = (nivel) => ({
+const colorNivel = (nivel) => ({ // Devuelve el color correspondiente al nivel de intensidad
+    'Muy suave': '#d4edda',
+    'Suave':     '#d0eaf8',
+    'Moderado':  '#fff9c4',
     'Muy suave': '#d4edda',
     'Suave':     '#d0eaf8',
     'Moderado':  '#fff9c4',
     'Intenso':   '#ffd5d5',
 }[nivel] ?? '#fafafa')
 
-onUnmounted(() => clearInterval(intervalo))
+onUnmounted(() => clearInterval(intervalo)) // Limpia el intervalo al desmontar el componente
 </script>
 
 <template>

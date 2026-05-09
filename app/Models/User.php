@@ -2,6 +2,10 @@
 
 namespace App\Models;
 
+// Modelo de Usuario para la aplicación Heart to Heart.
+// Extiende Authenticatable de Laravel para autenticación.
+// Implementa MustVerifyEmail para verificación de email.
+
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -12,6 +16,7 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
+    // Campos que se pueden asignar masivamente (mass assignment)
     protected $fillable = [
         'name',
         'email',
@@ -27,11 +32,13 @@ class User extends Authenticatable implements MustVerifyEmail
         'objetivo_principal',
     ];
 
+    // Campos ocultos en las respuestas JSON
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
+    // Conversión automática de tipos de datos
     protected function casts(): array
     {
         return [
@@ -46,41 +53,49 @@ class User extends Authenticatable implements MustVerifyEmail
 
     // ── Relaciones ──
 
+    // Registros emocionales del usuario
     public function emotionalRecords()
     {
         return $this->hasMany(EmotionalRecord::class);
     }
 
+    // Mensajes de chat con Hearty
     public function chatMessages()
     {
         return $this->hasMany(ChatMessage::class);
     }
 
+    // Posts en la comunidad
     public function communityPosts()
     {
         return $this->hasMany(CommunityPost::class);
     }
 
+    // Sesiones de respiración
     public function breathingSessions()
     {
         return $this->hasMany(BreathingSession::class);
     }
 
+    // Posts en el foro
     public function forumPosts()
     {
         return $this->hasMany(ForumPost::class);
     }
 
+    // Likes en el foro
     public function forumLikes()
     {
         return $this->hasMany(ForumLike::class);
     }
 
+    // Noticias guardadas
     public function savedNews()
     {
         return $this->hasMany(SavedNews::class);
     }
 
+    // Logros desbloqueados (relación muchos a muchos)
     public function achievements()
     {
         return $this->belongsToMany(Achievement::class, 'user_achievements')
@@ -88,6 +103,7 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withTimestamps();
     }
 
+    // Recursos guardados (relación muchos a muchos)
     public function savedResources()
     {
         return $this->belongsToMany(Resource::class, 'resource_saves')
@@ -96,11 +112,13 @@ class User extends Authenticatable implements MustVerifyEmail
 
     // ── Helpers ──
 
+    // Calcula el total de puntos obtenidos de los logros
     public function totalPoints(): int
     {
         return $this->achievements()->sum('points');
     }
 
+    // Determina el nivel actual basado en el número de logros
     public function nivelActual(): string
     {
         $logros = $this->achievements()->count();
@@ -113,6 +131,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return 'Semilla';
     }
 
+    // Calcula la racha actual de registros emocionales diarios
     public function rachaActual(): int
     {
         $registros = $this->emotionalRecords()

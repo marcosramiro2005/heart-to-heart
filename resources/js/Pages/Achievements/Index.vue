@@ -1,22 +1,30 @@
 <script setup>
+// Página de logros del usuario.
+// Muestra todos los logros del sistema agrupados por categoría,
+// marcando cuáles ha desbloqueado el usuario (unlocked = true) y cuáles aún están bloqueados.
+// También muestra el nivel actual, puntos totales y barra de progreso hacia el siguiente nivel.
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { computed } from 'vue'
 
+// Props recibidas de AchievementController::index()
 const props = defineProps({
-    logros:        Array,
-    puntosTotales: Number,
-    nivel:         Object,
-    totalUnlocked: Number,
-    totalLogros:   Number,
+    logros:        Array,  // todos los logros con {id, code, name, emoji, color, category, points, unlocked}
+    puntosTotales: Number, // suma de puntos de los logros desbloqueados
+    nivel:         Object, // {nombre, emoji, color, progreso, siguiente, puntos_siguiente}
+    totalUnlocked: Number, // cuántos logros ha desbloqueado el usuario
+    totalLogros:   Number, // total de logros existentes en el sistema
 })
 
+// Definición de las categorías de logros con su etiqueta y color de acento
 const categorias = {
-    racha:       { label: '🔥 Rachas',       color: '#FF8C42' },
-    bienestar:   { label: '🫁 Bienestar',    color: '#4ECDC4' },
-    social:      { label: '💬 Social',       color: '#6B9FD4' },
-    explorador:  { label: '🌟 Explorador',   color: '#9B8EC4' },
+    racha:      { label: '🔥 Rachas',    color: '#FF8C42' },
+    bienestar:  { label: '🫁 Bienestar', color: '#4ECDC4' },
+    social:     { label: '💬 Social',    color: '#6B9FD4' },
+    explorador: { label: '🌟 Explorador',color: '#9B8EC4' },
 }
 
+// Agrupa los logros por categoría para mostrarlos en secciones separadas en la vista
 const logrosPorCategoria = computed(() => {
     const grupos = {}
     for (const cat in categorias) {
@@ -25,6 +33,7 @@ const logrosPorCategoria = computed(() => {
     return grupos
 })
 
+// Porcentaje de logros completados sobre el total (para la barra de progreso global)
 const porcentajeCompletado = computed(() =>
     Math.round((props.totalUnlocked / props.totalLogros) * 100)
 )

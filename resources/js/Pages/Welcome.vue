@@ -1,23 +1,18 @@
 <script setup>
+// Página de bienvenida por defecto de Laravel Breeze (no se usa en producción).
+// Heart to Heart usa Landing.vue como página pública real.
+// Este archivo se mantiene como scaffolding de Breeze pero no está en las rutas activas.
+
 import { Head, Link } from '@inertiajs/vue3';
 
 defineProps({
-    canLogin: {
-        type: Boolean,
-    },
-    canRegister: {
-        type: Boolean,
-    },
-    laravelVersion: {
-        type: String,
-        required: true,
-    },
-    phpVersion: {
-        type: String,
-        required: true,
-    },
+    canLogin:       { type: Boolean },   // si la app tiene login habilitado
+    canRegister:    { type: Boolean },   // si el registro está habilitado
+    laravelVersion: { type: String, required: true }, // versión de Laravel
+    phpVersion:     { type: String, required: true }, // versión de PHP
 });
 
+// Oculta la imagen de fondo si no carga (fallback visual de Breeze)
 function handleImageError() {
     document.getElementById('screenshot-container')?.classList.add('!hidden');
     document.getElementById('docs-card')?.classList.add('!row-span-1');

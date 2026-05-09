@@ -1,7 +1,7 @@
 # Configuración de despliegue en Fly.io para Heart to Heart
 # Documentación: https://fly.io/docs/reference/configuration/
 
-app = "heart-to-heart-marcos"   # CAMBIA ESTO: debe ser único en Fly.io (ej: heart-to-heart-marco)
+app = "heart-to-heart-marcos"  
 primary_region = "ams"        # Amsterdam — servidor más cercano a España disponible
 
 [build]

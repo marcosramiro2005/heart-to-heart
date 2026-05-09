@@ -1,16 +1,24 @@
 <script setup>
+// Página de detalle de un recurso de la biblioteca interna.
+// Muestra el contenido completo del recurso, su color de categoría
+// (calculado por getCategoryColorAttribute() en el modelo Resource),
+// las vistas y un botón para guardar/quitar de guardados.
+// Al final lista recursos relacionados de la misma categoría.
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref } from 'vue'
 import { Link } from '@inertiajs/vue3'
 import axios from 'axios'
 
 const props = defineProps({
-    recurso:      Object,
-    relacionados: Array,
+    recurso:      Object, // recurso completo con is_saved, category_color, type_label, read_time...
+    relacionados: Array,  // hasta 3 recursos de la misma categoría para mostrar al final
 })
 
+// Estado local del botón guardar; se inicializa desde el servidor y se alterna localmente
 const guardado = ref(props.recurso.is_saved)
 
+// Llama al endpoint toggle: el servidor crea o elimina el ResourceSave del usuario
 const toggleGuardar = async () => {
     await axios.post(`/biblioteca/${props.recurso.id}/guardar`)
     guardado.value = !guardado.value

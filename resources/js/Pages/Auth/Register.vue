@@ -1,7 +1,13 @@
 <script setup>
+// Página de registro de nuevos usuarios.
+// Usa useForm de Inertia para gestionar el envío; al terminar limpia
+// los campos de contraseña por seguridad (onFinish se ejecuta siempre).
+
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
+// Los 4 campos coinciden con los validados en RegisteredUserController
+// password_confirmation lo valida Laravel automáticamente con la regla 'confirmed'
 const form = useForm({
     name:                  '',
     email:                 '',
@@ -9,15 +15,17 @@ const form = useForm({
     password_confirmation: '',
 })
 
-const mostrarPassword = ref(false)
-const paso            = ref(1)
+const mostrarPassword = ref(false) // alterna entre type="password" y type="text"
+const paso            = ref(1)     // ref auxiliar (actualmente no condiciona la template)
 
+// Envía al backend; limpia ambas contraseñas al terminar sea cual sea el resultado
 const submit = () => {
     form.post(route('register'), {
         onFinish: () => form.reset('password', 'password_confirmation'),
     })
 }
 
+// Validación de cliente: solo avanza al paso 2 si nombre y email tienen valor
 const siguientePaso = () => {
     if (paso.value === 1 && form.name && form.email) paso.value = 2
 }
@@ -151,7 +159,10 @@ const siguientePaso = () => {
                         </div>
                     </div>
 
-                    <!-- Indicador de fortaleza de contraseña -->
+                    <!-- Indicador de fortaleza de contraseña:
+                         solo se muestra cuando el usuario ha escrito algo.
+                         La anchura de la barra es length*10% (cap 100%).
+                         Colores: <6 chars → rojo (débil), <10 → naranja (moderada), ≥10 → verde (fuerte). -->
                     <div v-if="form.password.length > 0" class="password-strength">
                         <div class="ps-barra">
                             <div

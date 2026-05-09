@@ -1,15 +1,20 @@
 <script setup>
+// Página SOS: recursos de emergencia emocional.
+// Está diseñada para momentos de crisis aguda: proporciona técnicas rápidas
+// (respiración 4-7-8, grounding 5-4-3-2-1), números de emergencia (024, 112)
+// y recursos de apoyo. Es accesible sin necesidad de configurar nada.
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref } from 'vue'
 import { Link } from '@inertiajs/vue3'
 
-const faseActiva    = ref('inicio')
-const tecnicaActiva = ref(null)
-const cuenta        = ref(0)
-const faseTemporizador = ref('')
-let intervalo = null
+const faseActiva       = ref('inicio')  // 'inicio' muestra el menú, 'tecnica' muestra la técnica activa
+const tecnicaActiva    = ref(null)      // 'respiracion' o 'grounding'
+const cuenta           = ref(0)         // contador regresivo del temporizador de respiración
+const faseTemporizador = ref('')        // texto de la fase actual: 'INHALA', 'MANTÉN' o 'EXHALA'
+let intervalo = null                    // referencia al setInterval para poder limpiarlo
 
-// ── Respiración de emergencia 4-7-8 ──
+// Inicia el temporizador de respiración guiada 4-7-8 (inhala 4s, mantén 7s, exhala 8s)
 const iniciarRespiracion = () => {
     tecnicaActiva.value = 'respiracion'
     faseActiva.value    = 'tecnica'

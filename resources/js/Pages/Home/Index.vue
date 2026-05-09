@@ -1,11 +1,16 @@
 <script setup>
+// Página de inicio (Home) que muestra un saludo personalizado según la hora del día,
+// accesos rápidos contextuales y secciones de las funcionalidades principales de la app.
+// Es la primera página que ve el usuario después de iniciar sesión.
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Link, usePage, router } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
 
 const page = usePage()
-const user = computed(() => page.props.auth?.user)
+const user = computed(() => page.props.auth?.user) // datos del usuario desde el middleware de Inertia
 
+// Datos de la hora actual para personalizar el saludo y los accesos rápidos
 const ahora     = new Date()
 const hora      = ahora.getHours()
 const minutos   = ahora.getMinutes()
@@ -13,6 +18,7 @@ const diaSemana = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','S
 const diaNumero = ahora.getDate()
 const mes       = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][ahora.getMonth()]
 
+// Saludo que cambia según el tramo del día
 const saludo = computed(() => {
     if (hora < 6)  return 'Buenas noches'
     if (hora < 12) return 'Buenos días'
@@ -26,6 +32,7 @@ const saludoEmoji = computed(() => {
     return '🌙'
 })
 
+// Una frase motivacional diferente cada día de la semana (rotación por módulo)
 const frases = [
     { texto: 'El progreso, no la perfección, es lo que importa.', emoji: '🌱' },
     { texto: 'Cuidarte no es egoísta, es necesario.',             emoji: '💚' },
@@ -35,14 +42,17 @@ const frases = [
     { texto: 'Tu bienestar emocional importa de verdad.',         emoji: '💙' },
     { texto: 'Eres más fuerte de lo que crees.',                  emoji: '💪' },
 ]
+// Se selecciona la frase según el día de la semana (0=domingo...6=sábado)
 const fraseHoy = frases[ahora.getDay() % frases.length]
 
+// Reloj formateado con ceros a la izquierda (ej: "09:05")
 const horaFormateada = computed(() => {
     const h = hora.toString().padStart(2, '0')
     const m = minutos.toString().padStart(2, '0')
     return `${h}:${m}`
 })
 
+// Título contextual del bloque de accesos rápidos según el tramo del día
 const ctxTitle = computed(() => {
     if (hora < 9)  return { icon: '🌅', texto: 'Para empezar bien el día' }
     if (hora < 14) return { icon: '☀️', texto: 'Para este momento del día' }
@@ -50,6 +60,7 @@ const ctxTitle = computed(() => {
     return { icon: '🌙', texto: 'Para terminar el día bien' }
 })
 
+// Los 3 accesos rápidos cambian según la hora del día para sugerir actividades apropiadas
 const accesosPorHora = computed(() => {
     if (hora < 9) return [
         { nombre: 'Empezar el día',    desc: 'Respiración para activarte',      icon: '🫁', ruta: '/respiracion',   color: '#d4edda', accent: '#6BCF7F' },

@@ -1,4 +1,8 @@
 <script setup>
+// Página de error 404 personalizada de Heart to Heart.
+// Se muestra cuando el middleware de Inertia no encuentra la ruta solicitada
+// o cuando se usa desde el handler de errores de Laravel (recursos/app.blade.php).
+// No tiene lógica: solo un botón para volver a /home.
 import { Link } from '@inertiajs/vue3'
 </script>
 

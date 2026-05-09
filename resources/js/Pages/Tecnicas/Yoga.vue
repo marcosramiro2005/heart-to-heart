@@ -1,12 +1,16 @@
 <script setup>
+// Componente de Yoga Guiado
+// Este componente guía al usuario a través de una secuencia de posturas de yoga
+// Incluye instrucciones detalladas y temporizador para cada postura
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref } from 'vue'
 
-const paso = ref(0)
-const activo = ref(false)
-const completado = ref(false)
+const paso = ref(0) // Paso actual en la secuencia de yoga
+const activo = ref(false) // Si la sesión está activa
+const completado = ref(false) // Si la secuencia se completó
 
-const posturas = [
+const posturas = [ // Secuencia de posturas de yoga con instrucciones
     {
         nombre: 'Postura de la montaña',
         emoji: '🧍',
@@ -73,13 +77,13 @@ const posturas = [
     },
 ]
 
-let intervalo = null
-const tiempoFase = ref(0)
-const tiempoTotal = ref(0)
+let intervalo = null // ID del intervalo para el temporizador
+const tiempoFase = ref(0) // Segundos restantes en la postura actual
+const tiempoTotal = ref(0) // Segundos restantes en la sesión completa
 
-const posturActual = () => posturas[paso.value]
+const posturActual = () => posturas[paso.value] // Devuelve la postura actual
 
-const iniciar = () => {
+const iniciar = () => { // Inicia la sesión de yoga
     activo.value    = true
     completado.value = false
     paso.value      = 0
@@ -103,23 +107,23 @@ const iniciar = () => {
     }, 1000)
 }
 
-const detener = () => {
+const detener = () => { // Detiene la sesión de yoga
     clearInterval(intervalo)
     activo.value = false
     paso.value   = 0
 }
 
-const saltar = () => {
+const saltar = () => { // Salta a la siguiente postura
     if (paso.value < posturas.length - 1) {
         paso.value++
         tiempoFase.value = posturas[paso.value].duracion
     }
 }
 
-const formatear = (s) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
+const formatear = (s) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}` // Formatea segundos en MM:SS
 
 import { onUnmounted } from 'vue'
-onUnmounted(() => clearInterval(intervalo))
+onUnmounted(() => clearInterval(intervalo)) // Limpia el intervalo al desmontar el componente
 </script>
 
 <template>

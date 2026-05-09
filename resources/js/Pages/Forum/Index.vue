@@ -1,25 +1,32 @@
 <script setup>
+// Página principal del foro comunitario.
+// Muestra posts con paginación, filtros por categoría y orden, búsqueda de texto,
+// posts destacados, posts en tendencia y estadísticas globales del foro.
+// Los usuarios pueden publicar nuevos posts (con opción de anonimato) y dar likes.
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref, computed } from 'vue'
 import { Link, router, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 
+// Props recibidas de ForumController::index()
 const props = defineProps({
-    posts:      Object,
-    destacados: Array,
-    trending:   Array,
-    stats:      Object,
-    categoria:  String,
-    busqueda:   String,
-    orden:      String,
+    posts:      Object, // paginator de Laravel con los posts de la página actual
+    destacados: Array,  // posts marcados como is_featured (máximo 3)
+    trending:   Array,  // posts más activos de los últimos 7 días (máximo 5)
+    stats:      Object, // total_posts, posts_hoy, total_usuarios (cacheados 30 min)
+    categoria:  String, // filtro de categoría activo
+    busqueda:   String, // texto de búsqueda activo
+    orden:      String, // criterio de ordenación: 'reciente', 'popular', 'comentado'
 })
 
 const page        = usePage()
-const mostrarForm = ref(false)
-const busqueda    = ref(props.busqueda || '')
+const mostrarForm = ref(false)             // controla si se muestra el formulario de nuevo post
+const busqueda    = ref(props.busqueda || '') // estado local de la búsqueda (sincronizado con el input)
 const nuevoPost   = ref({ title: '', content: '', is_anonymous: false, categoria: 'general' })
 const enviando    = ref(false)
 
+// Categorías disponibles para filtrar y para crear posts
 const categorias = [
     { id: 'todos',      label: 'Todos',       emoji: '🌐' },
     { id: 'general',    label: 'General',      emoji: '💬' },
@@ -47,6 +54,8 @@ const colorCategoria = (cat) => ({
     otros:      '#d4edda',
 }[cat] ?? '#fafafa')
 
+// Filtra los posts por categoría manteniendo el orden y búsqueda actuales
+// preserveState: true evita que el scroll vuelva al inicio al cambiar el filtro
 const filtrar = (cat) => {
     router.get('/comunidad', {
         categoria: cat,
@@ -55,6 +64,7 @@ const filtrar = (cat) => {
     }, { preserveState: true })
 }
 
+// Cambia el criterio de ordenación manteniendo la categoría y búsqueda actuales
 const cambiarOrden = (ord) => {
     router.get('/comunidad', {
         categoria: props.categoria,
@@ -63,6 +73,7 @@ const cambiarOrden = (ord) => {
     }, { preserveState: true })
 }
 
+// Ejecuta la búsqueda por texto (se llama al pulsar Enter o el botón de buscar)
 const buscar = () => {
     router.get('/comunidad', {
         categoria: props.categoria,
@@ -71,6 +82,7 @@ const buscar = () => {
     })
 }
 
+// Envía el nuevo post al servidor mediante POST
 const publicar = () => {
     if (!nuevoPost.value.title.trim() || !nuevoPost.value.content.trim()) return
     enviando.value = true

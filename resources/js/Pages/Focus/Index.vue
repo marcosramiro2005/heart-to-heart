@@ -1,43 +1,50 @@
 <script setup>
+// Página del Modo Focus: temporizador Pomodoro para sesiones de concentración.
+// El método Pomodoro divide el trabajo en bloques (ej: 25 min trabajo / 5 min descanso).
+// Incluye: 4 modos predefinidos, lista de tareas de la sesión y sonido ambiental opcional.
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref, computed, onUnmounted } from 'vue'
 
-// ── Configuración Pomodoro ──
+// Modos predefinidos de Pomodoro con tiempos de trabajo, descanso corto y descanso largo
 const configs = [
-    { id: 'clasico',    nombre: 'Clásico',       trabajo: 25, descanso: 5,  descansoLargo: 15, color: '#ffd5d5', emoji: '🍅' },
-    { id: 'intenso',    nombre: 'Intenso',        trabajo: 50, descanso: 10, descansoLargo: 20, color: '#e8d5f5', emoji: '⚡' },
-    { id: 'suave',      nombre: 'Suave',          trabajo: 15, descanso: 5,  descansoLargo: 10, color: '#d4edda', emoji: '🌿' },
-    { id: 'estudiante', nombre: 'Estudiante',     trabajo: 45, descanso: 10, descansoLargo: 20, color: '#d0eaf8', emoji: '📚' },
+    { id: 'clasico',    nombre: 'Clásico',    trabajo: 25, descanso: 5,  descansoLargo: 15, color: '#ffd5d5', emoji: '🍅' },
+    { id: 'intenso',    nombre: 'Intenso',    trabajo: 50, descanso: 10, descansoLargo: 20, color: '#e8d5f5', emoji: '⚡' },
+    { id: 'suave',      nombre: 'Suave',      trabajo: 15, descanso: 5,  descansoLargo: 10, color: '#d4edda', emoji: '🌿' },
+    { id: 'estudiante', nombre: 'Estudiante', trabajo: 45, descanso: 10, descansoLargo: 20, color: '#d0eaf8', emoji: '📚' },
 ]
 
-const configActiva   = ref(configs[0])
-const fase           = ref('idle') // idle, trabajo, descanso, descanso-largo
-const segundos       = ref(configs[0].trabajo * 60)
-const ciclos         = ref(0)
-const ciclosTotal    = ref(0)
-const corriendo      = ref(false)
-const tarea          = ref('')
-const tareasHechas   = ref([])
-const musicaActiva   = ref(null)
-let intervalo        = null
-let audioCtx         = null
-let nodoMusica       = null
+const configActiva = ref(configs[0])          // modo Pomodoro activo actualmente
+const fase         = ref('idle')              // 'idle' | 'trabajo' | 'descanso' | 'descanso-largo'
+const segundos     = ref(configs[0].trabajo * 60) // tiempo restante en segundos
+const ciclos       = ref(0)                   // ciclos completados en la sesión actual
+const ciclosTotal  = ref(0)                   // total histórico de ciclos de la sesión
+const corriendo    = ref(false)               // true cuando el temporizador está contando
+const tarea        = ref('')                  // texto de la tarea actual
+const tareasHechas = ref([])                  // lista de tareas completadas durante la sesión
+const musicaActiva = ref(null)                // ID del sonido ambiental activo
+let intervalo      = null                     // referencia al setInterval del temporizador
+let audioCtx       = null                     // Web Audio API context (no usado actualmente)
+let nodoMusica     = null                     // nodo de audio (no usado actualmente)
 
-// ── Audio ambient para focus ──
+// Opciones de sonido ambiental para acompañar la sesión de focus
 const musicaOptions = [
-    { id: 'lluvia',  nombre: 'Lluvia suave',   emoji: '🌧️' },
-    { id: 'bosque',  nombre: 'Bosque',          emoji: '🌲' },
-    { id: 'cafe',    nombre: 'Cafetería',        emoji: '☕' },
-    { id: 'ninguno', nombre: 'Sin música',       emoji: '🔇' },
+    { id: 'lluvia',  nombre: 'Lluvia suave', emoji: '🌧️' },
+    { id: 'bosque',  nombre: 'Bosque',       emoji: '🌲' },
+    { id: 'cafe',    nombre: 'Cafetería',    emoji: '☕' },
+    { id: 'ninguno', nombre: 'Sin música',   emoji: '🔇' },
 ]
 
-let audioElement = null
+let audioElement = null // elemento HTML Audio para reproducir el sonido ambiental
 
+// Crea y comienza a reproducir el archivo de audio ambiental seleccionado.
+// Detiene el audio anterior antes de crear uno nuevo.
 const crearAudio = (tipo) => {
     detenerAudio()
 
     if (tipo === 'ninguno' || !tipo) return
 
+    // Rutas a los archivos de audio en /public/sounds/
     const urls = {
         lluvia: '/sounds/lluvia.mp3',
         bosque: '/sounds/bosque.mp3',

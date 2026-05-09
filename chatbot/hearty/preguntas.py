@@ -1,3 +1,7 @@
+# preguntas.py - Flujo de preguntas del chatbot Hearty
+# Este archivo define el flujo conversacional estructurado del chatbot.
+# Cada pregunta tiene un ID único, mensaje, opciones de respuesta y el siguiente paso.
+
 FLUJO_PREGUNTAS = [
     {
         "id": "bienvenida",

@@ -1,7 +1,12 @@
 <script setup>
+// Componente de Respiración Guiada
+// Este componente permite a los usuarios practicar técnicas de respiración con animaciones visuales
+// Incluye tres técnicas: 4-7-8, Caja y Coherente, cada una con fases específicas y ciclos
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref, computed, onUnmounted } from 'vue'
 
+// Datos de las técnicas de respiración disponibles
 const tecnicas = [
     {
         id: '4-7-8',
@@ -50,26 +55,29 @@ const tecnicas = [
     },
 ]
 
-const tecnicaActiva  = ref(null)
-const activo         = ref(false)
-const completado     = ref(false)
-const faseIdx        = ref(0)
-const cicloActual    = ref(0)
-const cuenta         = ref(0)
-const progresoPct    = ref(0)
-let intervalo        = null
+// Variables reactivas para el estado de la sesión de respiración
+const tecnicaActiva  = ref(null)  // Técnica seleccionada actualmente
+const activo         = ref(false) // Si hay una sesión activa
+const completado     = ref(false) // Si la sesión se completó
+const faseIdx        = ref(0)     // Índice de la fase actual en el ciclo
+const cicloActual    = ref(0)     // Ciclo actual (0-indexado)
+const cuenta         = ref(0)     // Segundos restantes en la fase actual
+const progresoPct    = ref(0)     // Porcentaje de progreso total
+let intervalo        = null       // ID del intervalo para el temporizador
 
+// Propiedades computadas
 const faseActual = computed(() =>
     tecnicaActiva.value?.fases[faseIdx.value] ?? null
-)
+) // Fase actual del ciclo
 
 const escalaCirculo = computed(() => {
     if (!faseActual.value) return 1
     if (faseActual.value.nombre === 'INHALA') return 1 + (1 - cuenta.value / faseActual.value.duracion) * 0.35
     if (faseActual.value.nombre === 'EXHALA') return 1 + (cuenta.value / faseActual.value.duracion) * 0.35
     return 1.3
-})
+}) // Escala del círculo animado basada en la fase y cuenta regresiva
 
+// Métodos para controlar la sesión
 const iniciar = (tec) => {
     tecnicaActiva.value = tec
     activo.value        = true
@@ -82,7 +90,7 @@ const iniciar = (tec) => {
     intervalo = setInterval(tick, 1000)
 }
 
-const tick = () => {
+const tick = () => { // Función llamada cada segundo para actualizar el estado de la sesión
     cuenta.value--
 
     // Actualizar progreso total
@@ -114,22 +122,23 @@ const tick = () => {
     }
 }
 
-const detener = () => {
+const detener = () => { // Detiene la sesión actual
     clearInterval(intervalo)
     activo.value        = false
     tecnicaActiva.value = null
     completado.value    = false
 }
 
-const totalCiclos = computed(() => tecnicaActiva.value?.ciclos ?? 0)
+const totalCiclos = computed(() => tecnicaActiva.value?.ciclos ?? 0) // Número total de ciclos de la técnica activa
 
-onUnmounted(() => clearInterval(intervalo))
+onUnmounted(() => clearInterval(intervalo)) // Limpia el intervalo al desmontar el componente
 </script>
 
 <template>
     <AppLayout>
         <div class="resp-wrapper">
 
+            <!-- Cabecera de la página -->
             <div class="resp-header">
                 <span>🫁</span>
                 <h1>RESPIRACIÓN GUIADA</h1>
@@ -137,7 +146,7 @@ onUnmounted(() => clearInterval(intervalo))
 
             <p class="subtitulo">Técnicas de respiración con animación guiada para calmar cuerpo y mente</p>
 
-            <!-- Selector de técnica -->
+            <!-- Selector de técnica cuando no hay sesión activa -->
             <div v-if="!activo && !completado" class="tecnicas-selector">
                 <div
                     v-for="tec in tecnicas"
@@ -167,7 +176,7 @@ onUnmounted(() => clearInterval(intervalo))
                 </div>
             </div>
 
-            <!-- Sesión activa -->
+            <!-- Sesión activa de respiración -->
             <div v-if="activo" class="resp-sesion">
 
                 <h2 class="rs-titulo">{{ tecnicaActiva.nombre }}</h2>
@@ -234,7 +243,7 @@ onUnmounted(() => clearInterval(intervalo))
                 <button class="btn-detener-resp" @click="detener">⏹ Detener</button>
             </div>
 
-            <!-- Completado -->
+            <!-- Pantalla de completado de la sesión -->
             <div v-if="completado" class="resp-completado">
                 <span class="rc-emoji">🎉</span>
                 <h2>¡Sesión completada!</h2>

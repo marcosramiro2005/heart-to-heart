@@ -1,7 +1,11 @@
 <?php
 
+// Este archivo define las rutas web de la aplicación Laravel "Heart to Heart".
+// Las rutas web manejan las solicitudes HTTP para páginas y acciones del frontend.
+// Utiliza Inertia.js para renderizar componentes de React/Vue en el backend.
+
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\HeartyController; 
+use App\Http\Controllers\HeartyController;
 use App\Http\Controllers\ForumController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\EmotionalDashboardController;
@@ -17,6 +21,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
+// Ruta para estadísticas del usuario, requiere autenticación
 Route::get('/mis-estadisticas', function () {
     return Inertia::render('Stats/Index');
 })->middleware('auth')->name('stats');
@@ -48,13 +53,14 @@ Route::middleware('auth')->group(function () {
 
 // ── Rutas protegidas ──
 Route::middleware(['auth'])->group(function () {
-
+    // Rutas relacionadas con el chatbot Hearty
     // Hearty
     Route::get('/hearty',              [HeartyController::class, 'index'])->name('hearty');
     Route::get('/hearty/inicio',       [HeartyController::class, 'inicio']);
     Route::post('/hearty/chat',        [HeartyController::class, 'chat']);
     Route::delete('/hearty/limpiar',   [HeartyController::class, 'limpiarChat'])->name('hearty.limpiar');
 
+    // Rutas para el foro de la comunidad
     // Foro
     Route::get('/comunidad',                        [ForumController::class, 'index'])->name('forum.index');
     Route::get('/comunidad/{forumPost}',             [ForumController::class, 'show'])->name('forum.show');
@@ -63,34 +69,41 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/comunidad/{forumPost}/like',       [ForumController::class, 'like'])->name('forum.like');
     Route::delete('/comunidad/{forumPost}',          [ForumController::class, 'destroy'])->name('forum.destroy');
 
+    // Rutas para noticias y recursos
     // Noticias y recursos
     Route::get('/recursos',           [NewsController::class, 'index'])->name('news.index');
     Route::get('/recursos/guardados', [NewsController::class, 'guardadas'])->name('news.guardadas');
     Route::post('/recursos/guardar',  [NewsController::class, 'toggleGuardar'])->name('news.guardar');
 
+    // Rutas para el dashboard emocional
     // Emociones
     Route::get('/mis-emociones',             [EmotionalDashboardController::class, 'index'])->name('emotional.dashboard');
     Route::post('/mis-emociones/registrar',  [EmotionalDashboardController::class, 'registrar'])->name('emotional.registrar');
 
+    // Rutas para logros y achievements
     // Logros
     Route::get('/logros',              [AchievementController::class, 'index'])->name('achievements.index');
     Route::post('/logros/verificar',   [AchievementController::class, 'verificar'])->name('achievements.verificar');
 
+    // Rutas para el perfil de usuario personalizado
     // Perfil de usuario
     Route::get('/perfil',              [UserProfileController::class, 'index'])->name('profile.show');
     Route::patch('/perfil',            [UserProfileController::class, 'update'])->name('profile.update_custom');
     Route::patch('/perfil/password',   [UserProfileController::class, 'updatePassword'])->name('profile.password');
     Route::delete('/perfil',           [UserProfileController::class, 'deleteAccount'])->name('profile.delete');
 
+    // Rutas para la biblioteca de recursos
     // Biblioteca
     Route::get('/biblioteca',                      [ResourceLibraryController::class, 'index'])->name('library.index');
     Route::get('/biblioteca/guardados',            [ResourceLibraryController::class, 'guardados'])->name('library.saved');
     Route::get('/biblioteca/{resource}',           [ResourceLibraryController::class, 'show'])->name('library.show');
     Route::post('/biblioteca/{resource}/guardar',  [ResourceLibraryController::class, 'toggleSave'])->name('library.save');
 
+    // Página estática sobre quiénes somos
     // Quiénes somos
     Route::get('/quienes-somos', fn() => Inertia::render('About/Index'))->name('about');
 
+    // Rutas para técnicas de bienestar (páginas estáticas)
     // Técnicas
     Route::get('/respiracion',         fn() => Inertia::render('Tecnicas/Respiracion'))->name('respiracion');
     Route::get('/meditacion',          fn() => Inertia::render('Tecnicas/Meditacion'))->name('meditacion');
@@ -106,21 +119,28 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/relajacion-muscular', fn() => Inertia::render('Tecnicas/RelajacionMuscular'))->name('relajacion_muscular');
     Route::get('/musicoterapia',       fn() => Inertia::render('Tecnicas/Musicoterapia'))->name('musicoterapia');
     Route::get('/gratitud-visual',     fn() => Inertia::render('Tecnicas/GratitudVisual'))->name('gratitud_visual');
+    // Rutas para retos y challenges
     Route::get('/retos',                                   [ChallengeController::class, 'index'])->name('challenges.index');
     Route::post('/retos/{challenge}/unirse',               [ChallengeController::class, 'unirse'])->name('challenges.join');
     Route::post('/retos/{userChallenge}/completar-dia',    [ChallengeController::class, 'completarDia'])->name('challenges.complete');
     Route::post('/retos/{userChallenge}/abandonar',        [ChallengeController::class, 'abandonar'])->name('challenges.abandon');
+    // Rutas para el test de bienestar
     Route::get('/test-bienestar',         [WellnessTestController::class, 'index'])->middleware('auth')->name('wellness.index');
     Route::post('/test-bienestar/guardar',[WellnessTestController::class, 'guardar'])->middleware('auth')->name('wellness.guardar');
+    // Rutas para el onboarding
     Route::get('/onboarding',  [OnboardingController::class, 'index'])->name('onboarding');
     Route::post('/onboarding', [OnboardingController::class, 'completar'])->name('onboarding.completar');
+    // Rutas para el diario personal
     Route::get('/diario',              [DiaryController::class, 'index'])->name('diary.index');
     Route::post('/diario',             [DiaryController::class, 'guardar'])->name('diary.guardar');
     Route::delete('/diario/{diaryEntry}', [DiaryController::class, 'eliminar'])->name('diary.eliminar');
+    // Página de foco (focus)
     Route::get('/focus', fn() => Inertia::render('Focus/Index'))->middleware('auth')->name('focus');
+    // Rutas para el plan de bienestar personalizado
     Route::get('/mi-plan',                          [WellnessPlanController::class, 'index'])->name('plan.index');
     Route::post('/mi-plan/generar',                 [WellnessPlanController::class, 'generar'])->name('plan.generar');
     Route::post('/mi-plan/{wellnessPlan}/completar',[WellnessPlanController::class, 'completarDia'])->name('plan.completar');
+    // Página de SOS (emergencia)
     Route::get('/sos', fn() => Inertia::render('SOS/Index'))->name('sos');
 });
 

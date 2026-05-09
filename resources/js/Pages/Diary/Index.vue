@@ -1,22 +1,30 @@
 <script setup>
+// Página del diario personal del usuario.
+// Permite escribir entradas con estado de ánimo, puntuación del mood y etiquetas.
+// Incluye: formulario de escritura, calendario del mes con puntos de color,
+// historial de todas las entradas y estadísticas (racha, mood frecuente, etc.)
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 
+// Props recibidas de DiaryController::index()
 const props = defineProps({
-    entradas:   Array,
-    stats:      Object,
-    calendario: Object,
+    entradas:   Array,  // todas las entradas del usuario, de más reciente a más antigua
+    stats:      Object, // total, esta_semana, racha, mood_promedio, mood_frecuente
+    calendario: Object, // {YYYY-MM-DD: {count, mood, mood_score}} del mes actual
 })
 
-const contenido   = ref('')
-const moodSelec   = ref(null)
-const moodScore   = ref(5)
-const tagsInput   = ref('')
+// Estado del formulario de nueva entrada
+const contenido   = ref('')      // texto de la entrada (mínimo 10 caracteres)
+const moodSelec   = ref(null)    // objeto mood seleccionado {id, emoji, label, score, color}
+const moodScore   = ref(5)       // puntuación numérica del estado de ánimo (1-10)
+const tagsInput   = ref('')      // etiquetas separadas por comas (ej: "trabajo, familia")
 const enviando    = ref(false)
-const vistaActual = ref('escribir')
-const entradaVer  = ref(null)
+const vistaActual = ref('escribir') // pestaña activa: 'escribir' o 'historial'
+const entradaVer  = ref(null)    // entrada que se está viendo en el modal de detalle
 
+// Opciones de estado de ánimo para seleccionar al escribir una entrada
 const moods = [
     { id: 'excelente', emoji: '🤩', label: 'Excelente', score: 9, color: '#d4edda' },
     { id: 'bien',      emoji: '😊', label: 'Bien',      score: 7, color: '#E8FAF9' },
@@ -25,6 +33,7 @@ const moods = [
     { id: 'terrible',  emoji: '😢', label: 'Terrible',  score: 1, color: '#ffd5d5' },
 ]
 
+// Preguntas motivadoras que rotan según el día de la semana para inspirar la escritura
 const prompts = [
     '¿Qué ha sido lo mejor de tu día?',
     '¿Qué te ha preocupado hoy y cómo lo has manejado?',
@@ -35,12 +44,15 @@ const prompts = [
     '¿Qué necesitas soltar para sentirte mejor?',
 ]
 
+// La pregunta del día cambia según el día de la semana (0=domingo...6=sábado)
 const promptHoy = prompts[new Date().getDay() % prompts.length]
 
+// Convierte el string de etiquetas separadas por comas en un array limpio para enviar al servidor
 const tagsArray = computed(() =>
     tagsInput.value.split(',').map(t => t.trim()).filter(Boolean)
 )
 
+// Contador de caracteres para el campo de texto (se muestra en la UI)
 const contadorChars = computed(() => contenido.value.length)
 
 const seleccionarMood = (mood) => {

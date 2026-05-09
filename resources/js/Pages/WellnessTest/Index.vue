@@ -1,15 +1,22 @@
 <script setup>
+// Página del test de bienestar emocional basado en el PHQ-9 (Patient Health Questionnaire).
+// El test tiene 9 preguntas con 4 opciones cada una (0-3 puntos).
+// La puntuación total va de 0 a 27 e indica el nivel de malestar emocional.
+// Solo se puede hacer un test cada 7 días para medir la evolución temporal.
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref, computed } from 'vue'
 import { Link } from '@inertiajs/vue3'
 import axios from 'axios'
 
+// Props recibidas de WellnessTestController::index()
 const props = defineProps({
-    historial:      Array,
-    ultimo:         Object,
-    puedeHacerTest: Boolean,
+    historial:      Array,   // últimos 8 tests del usuario con interpretación
+    ultimo:         Object,  // el test más reciente (null si nunca ha hecho uno)
+    puedeHacerTest: Boolean, // false si el último test fue hace menos de 7 días
 })
 
+// Las 9 preguntas del PHQ-9 adaptadas al español
 const preguntas = [
     'Poco interés o placer en hacer las cosas',
     'Sentirte desanimado/a, deprimido/a o sin esperanza',
@@ -22,6 +29,7 @@ const preguntas = [
     'Pensamientos de que estarías mejor muerto/a o de hacerte daño',
 ]
 
+// Las 4 opciones de frecuencia para cada pregunta, con su valor numérico (0-3)
 const opciones = [
     { valor: 0, label: 'Nunca' },
     { valor: 1, label: 'Varios días' },
@@ -29,20 +37,23 @@ const opciones = [
     { valor: 3, label: 'Casi todos los días' },
 ]
 
-const pestana       = ref('test')
-const respuestas    = ref(Array(9).fill(null))
-const enviando      = ref(false)
-const resultado     = ref(null)
-const preguntaActual = ref(0)
+const pestana        = ref('test')           // pestaña activa: 'test' o 'historial'
+const respuestas     = ref(Array(9).fill(null)) // array de 9 respuestas, null = sin responder
+const enviando       = ref(false)
+const resultado      = ref(null)             // resultado devuelto por el servidor tras enviar el test
+const preguntaActual = ref(0)               // índice de la pregunta visible en el modo paso a paso
 
+// Suma de todas las respuestas dadas (0-27)
 const puntuacionTotal = computed(() =>
     respuestas.value.reduce((s, v) => s + (v ?? 0), 0)
 )
 
+// True solo cuando las 9 preguntas han sido respondidas (habilita el botón de enviar)
 const todasRespondidas = computed(() =>
     respuestas.value.every(r => r !== null)
 )
 
+// Porcentaje de progreso del test (cuántas preguntas han sido respondidas)
 const progresoPct = computed(() => {
     const respondidas = respuestas.value.filter(r => r !== null).length
     return Math.round((respondidas / preguntas.length) * 100)

@@ -1,11 +1,15 @@
 <script setup>
+// Componente de EFT Tapping
+// Este componente guía al usuario a través de la técnica de acupresión emocional
+// Incluye una secuencia de puntos de tapping con instrucciones paso a paso
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref } from 'vue'
 
-const paso = ref(0)
-const activo = ref(false)
+const paso = ref(0) // Paso actual en la secuencia de tapping
+const activo = ref(false) // Si la sesión está activa
 
-const pasos = [
+const pasos = [ // Secuencia de puntos de tapping con instrucciones
     { zona: 'Punto de kárate', emoji: '✋', descripcion: 'Golpea el lado de la mano (entre el meñique y la muñeca) con los dedos de la otra mano.', rondas: 8 },
     { zona: 'Parte superior de la cabeza', emoji: '👆', descripcion: 'Con los dedos índice y medio, da pequeños golpecitos en la coronilla.', rondas: 7 },
     { zona: 'Ceja interna', emoji: '👁️', descripcion: 'Golpea el inicio de la ceja, cerca del puente de la nariz.', rondas: 7 },
@@ -17,7 +21,7 @@ const pasos = [
     { zona: 'Bajo el brazo', emoji: '💪', descripcion: 'Golpea el lateral del torso, a la altura de la axila.', rondas: 7 },
 ]
 
-const siguiente = () => {
+const siguiente = () => { // Avanza al siguiente paso en la secuencia
     if (paso.value < pasos.length - 1) paso.value++
     else { activo.value = false; paso.value = 0 }
 }

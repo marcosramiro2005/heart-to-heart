@@ -1,25 +1,36 @@
 <script setup>
+// Página del chatbot Hearty: interfaz de chat entre el usuario y el asistente emocional.
+// Se comunica con el servidor Flask (Python) a través de la API de Laravel (/hearty/chat).
+// Usa axios directamente (no router de Inertia) para peticiones sin recargar la página.
+//
+// Flujo de uso:
+// 1. El usuario pulsa "Iniciar conversación" → se llama /hearty/inicio para el saludo
+// 2. El usuario escribe o selecciona una opción rápida → se llama /hearty/chat
+// 3. Flask responde con texto, emoción detectada y técnicas sugeridas
+// 4. La respuesta se añade al array mensajes y se muestra en el chat
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref, nextTick, onMounted, computed } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
 import axios from 'axios'
 
-const page            = usePage()
-const user            = computed(() => page.props.auth?.user)
-const nombre          = computed(() => user.value?.name ?? '')
-const avatar          = computed(() => user.value?.avatar ?? '👤')
+const page   = usePage()
+const user   = computed(() => page.props.auth?.user)
+const nombre = computed(() => user.value?.name ?? '')
+const avatar = computed(() => user.value?.avatar ?? '👤')
 
-const mensajes        = ref([])
-const input           = ref('')
-const cargando        = ref(false)
-const chatRef         = ref(null)
-const emocionActual   = ref(null)
-const tecnicasActivas = ref([])
-const iniciado        = ref(false)
-const opcionesRapidas = ref([])
-const preguntaActual  = ref(null)
-const flowAnswers     = ref({})
+const mensajes        = ref([])           // array de mensajes del chat {id, sender, texto, tecnicas, hora}
+const input           = ref('')           // texto del input del usuario
+const cargando        = ref(false)        // true mientras espera respuesta de Flask
+const chatRef         = ref(null)         // referencia al div del chat para hacer scroll automático
+const emocionActual   = ref(null)         // última emoción detectada por Flask (cambia el color del chat)
+const tecnicasActivas = ref([])           // técnicas sugeridas por Flask en el último mensaje
+const iniciado        = ref(false)        // false hasta que el usuario pulsa "Iniciar"
+const opcionesRapidas = ref([])           // botones de respuesta rápida sugeridos por Flask
+const preguntaActual  = ref(null)         // ID de la pregunta actual del flujo conversacional
+const flowAnswers     = ref({})           // respuestas acumuladas del flujo para enviarlas a Flask
 
+// Colores del panel lateral que cambian según la emoción detectada en la conversación
 const colorEmocion = computed(() => ({
     ansiedad:  { bg: '#d0eaf8', text: '#1a6fa8', border: '#3B8BD4' },
     tristeza:  { bg: '#e8d5f5', text: '#5a2d82', border: '#9B8EC4' },
@@ -31,6 +42,8 @@ const colorEmocion = computed(() => ({
     crisis:    { bg: '#fff5f5', text: '#721c24', border: '#E63946' },
 }[emocionActual.value] ?? { bg: '#E8FAF9', text: '#3BAFA7', border: '#4ECDC4' }))
 
+// Hace scroll al final del chat tras añadir un nuevo mensaje.
+// nextTick() espera a que Vue actualice el DOM antes de calcular scrollHeight.
 const scrollAbajo = async () => {
     await nextTick()
     if (chatRef.value) {
@@ -38,9 +51,10 @@ const scrollAbajo = async () => {
     }
 }
 
+// Añade un nuevo mensaje al array de mensajes y hace scroll al final
 const agregarMensaje = (sender, texto, tecnicas = [], emocion = null) => {
     mensajes.value.push({
-        id:       Date.now() + Math.random(),
+        id:       Date.now() + Math.random(), // ID único para la key de Vue
         sender,
         texto,
         tecnicas: tecnicas || [],
@@ -50,30 +64,36 @@ const agregarMensaje = (sender, texto, tecnicas = [], emocion = null) => {
     scrollAbajo()
 }
 
+// Llama al endpoint /hearty/inicio para obtener el saludo personalizado de Hearty.
+// Si Flask no responde, usa un mensaje de fallback local.
 const iniciarChat = async () => {
-    iniciado.value = true
-    cargando.value = true
+    iniciado.value       = true
+    cargando.value       = true
     preguntaActual.value = null
-    flowAnswers.value = {}
+    flowAnswers.value    = {}
 
     try {
         const res = await axios.get(`/hearty/inicio?nombre=${encodeURIComponent(nombre.value)}&sesiones=0`)
         agregarMensaje('hearty', res.data.mensaje)
         opcionesRapidas.value = res.data.opciones ?? []
-        preguntaActual.value = res.data.pregunta_id ?? 'bienvenida'
+        preguntaActual.value  = res.data.pregunta_id ?? 'bienvenida'
     } catch (e) {
+        // Fallback si Flask no está disponible: saludo hardcoded con opciones básicas
         agregarMensaje('hearty', `¡Hola${nombre.value ? ', ' + nombre.value.split(' ')[0] : ''}! Soy Hearty 💚 Estoy aquí para escucharte. ¿Cómo te sientes hoy?`)
         opcionesRapidas.value = ['😊 Bien', '😌 Tranquilo/a', '😰 Ansioso/a', '😢 Triste', '😠 Enfadado/a', '😴 Cansado/a', '😤 Estresado/a', '😔 Solo/a']
-        preguntaActual.value = 'bienvenida'
+        preguntaActual.value  = 'bienvenida'
     } finally {
         cargando.value = false
     }
 }
 
+// Envía un mensaje al servidor y muestra la respuesta de Hearty.
+// textoDirecto se usa cuando el usuario pulsa un botón de opción rápida.
 const enviar = async (textoDirecto = null) => {
     const texto = textoDirecto || input.value.trim()
     if (!texto || cargando.value) return
 
+    // Guardar la respuesta a la pregunta actual en el objeto flowAnswers
     if (preguntaActual.value) {
         flowAnswers.value = {
             ...flowAnswers.value,

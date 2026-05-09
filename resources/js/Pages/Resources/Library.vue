@@ -1,16 +1,21 @@
 <script setup>
+// Biblioteca de recursos internos de Heart to Heart.
+// A diferencia de News (que usa NewsAPI), estos recursos son artículos y ejercicios
+// creados y gestionados en el panel de administración (tabla 'resources').
+// Permite filtrar por categoría, tipo (article/exercise) y búsqueda libre.
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref } from 'vue'
 import { router, Link } from '@inertiajs/vue3'
 import axios from 'axios'
 
 const props = defineProps({
-    recursos:   Object,
-    destacados: Array,
-    savedIds:   Array,
-    categoria:  String,
-    tipo:       String,
-    busqueda:   String,
+    recursos:   Object,  // LengthAwarePaginator con los recursos filtrados y paginados
+    destacados: Array,   // recursos con is_featured=true, mostrados en la sección "Destacados"
+    savedIds:   Array,   // array de IDs de recursos que el usuario ya ha guardado
+    categoria:  String,  // categoría activa del filtro (o null para "todos")
+    tipo:       String,  // tipo activo del filtro ('article'|'exercise'|null)
+    busqueda:   String,  // texto de búsqueda activo
 })
 
 const categorias = [
@@ -32,20 +37,25 @@ const tipos = [
 ]
 
 const busqueda   = ref(props.busqueda || '')
+// Copia local del array de IDs guardados para actualizarlo sin recargar la página
 const savedLocal = ref([...props.savedIds])
 
+// Filtra por categoría manteniendo el tipo activo; preserveState para no perder el scroll
 const filtrar = (cat) => {
     router.get('/biblioteca', { categoria: cat, tipo: props.tipo }, { preserveState: true })
 }
 
+// Filtra por tipo (article/exercise) manteniendo la categoría activa
 const filtrarTipo = (tipo) => {
     router.get('/biblioteca', { categoria: props.categoria, tipo }, { preserveState: true })
 }
 
+// Búsqueda de texto libre manteniendo los filtros activos
 const buscar = () => {
     router.get('/biblioteca', { categoria: props.categoria, tipo: props.tipo, busqueda: busqueda.value })
 }
 
+// Toggle guardar/quitar: actualiza el array local para que el icono cambie inmediatamente
 const toggleGuardar = async (recursoId) => {
     await axios.post(`/biblioteca/${recursoId}/guardar`)
     if (savedLocal.value.includes(recursoId)) {
@@ -55,6 +65,7 @@ const toggleGuardar = async (recursoId) => {
     }
 }
 
+// Helper para saber si un recurso concreto está en el array de IDs guardados
 const estaGuardado = (id) => savedLocal.value.includes(id)
 </script>
 

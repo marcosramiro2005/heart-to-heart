@@ -1,28 +1,38 @@
 <script setup>
+// Página de retos de bienestar.
+// Muestra dos pestañas: "Mis retos" (activos) y "Catálogo" (todos los disponibles).
+// El usuario puede unirse a retos de 7 o 30 días, marcar el día como completado cada día
+// y abandonar retos activos.
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 
+// Props recibidas de ChallengeController::index()
 const props = defineProps({
-    retosDisponibles: Array,
-    misRetos:         Array,
-    retosCompletados: Number,
+    retosDisponibles: Array,  // todos los retos del sistema con el progreso del usuario si participa
+    misRetos:         Array,  // retos en los que el usuario está activo actualmente
+    retosCompletados: Number, // número total de retos completados históricamente
 })
 
-const pestanaActiva = ref('mis-retos')
-const filtroTipo    = ref('todos')
+const pestanaActiva = ref('mis-retos') // pestaña activa: 'mis-retos' o 'catalogo'
+const filtroTipo    = ref('todos')     // filtro del catálogo: 'todos', '7days', '30days'
 
+// Pre-filtrado de retos por duración para el catálogo (evita filtrar en el template)
 const retos7  = props.retosDisponibles.filter(r => r.type === '7days')
 const retos30 = props.retosDisponibles.filter(r => r.type === '30days')
 
+// Envía la petición de unirse a un reto al servidor
 const unirse = (challengeId) => {
     router.post(`/retos/${challengeId}/unirse`)
 }
 
+// Marca el día de hoy como completado en el reto activo
 const completarDia = (userChallengeId) => {
     router.post(`/retos/${userChallengeId}/completar-dia`)
 }
 
+// Abandona un reto activo tras pedir confirmación al usuario
 const abandonar = (userChallengeId) => {
     if (!confirm('¿Seguro que quieres abandonar este reto?')) return
     router.post(`/retos/${userChallengeId}/abandonar`)

@@ -1,8 +1,12 @@
 <script setup>
+// Componente de Musicoterapia
+// Este componente muestra diferentes categorías de música terapéutica
+// con recomendaciones y ejercicios para usar la música como herramienta de bienestar
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref, onUnmounted } from 'vue'
 
-const categorias = [
+const categorias = [ // Categorías de música terapéutica con recomendaciones
     {
         id: 'calma',
         nombre: 'Calma y relajación',

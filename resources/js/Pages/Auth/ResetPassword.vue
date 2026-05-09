@@ -1,14 +1,20 @@
 <script setup>
+// Página para crear una nueva contraseña tras seguir el enlace del correo.
+// El token y el email llegan como props desde el controlador (NewPasswordController).
+// Laravel verifica la firma del enlace antes de mostrar esta página.
+
 import { Head, useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
 const props = defineProps({
-    email: String,
-    token: String,
+    email: String, // email del usuario (incluido en el enlace firmado)
+    token: String, // token de reset de un solo uso (caduca en 60 minutos por defecto)
 })
 
-const mostrarPassword = ref(false)
+const mostrarPassword = ref(false) // alterna visibilidad de ambos campos de contraseña
 
+// El token y email se envían como campos ocultos junto a la nueva contraseña.
+// Laravel los valida en NewPasswordController@store antes de actualizar la contraseña.
 const form = useForm({
     token:                 props.token,
     email:                 props.email,
@@ -16,6 +22,7 @@ const form = useForm({
     password_confirmation: '',
 })
 
+// Al terminar (éxito o error) limpia las contraseñas del formulario por seguridad
 const submit = () => {
     form.post(route('password.store'), {
         onFinish: () => form.reset('password', 'password_confirmation'),

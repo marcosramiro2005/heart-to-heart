@@ -1,30 +1,40 @@
 <script setup>
+// Página del plan semanal de bienestar personalizado.
+// El usuario elige un objetivo (ansiedad, tristeza, estrés, sueño o general) y se genera
+// un plan de 7 actividades (una por día) con rutas a las técnicas correspondientes.
+// Cada día se puede marcar como completado una sola vez; el plan se renueva cada lunes.
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref } from 'vue'
 import { router, Link } from '@inertiajs/vue3'
 
+// Props recibidas de WellnessPlanController::index()
 const props = defineProps({
-    planActual: Object,
-    historial:  Array,
-    objetivo:   String,
+    planActual: Object, // plan activo de la semana actual, o null si no se ha generado uno
+    historial:  Array,  // últimos 4 planes para mostrar el progreso semanal
+    objetivo:   String, // objetivo principal del usuario (preselecciona el tipo de plan)
 })
 
-const objetivoSelec = ref(props.objetivo ?? 'general')
-const generando     = ref(false)
+const objetivoSelec = ref(props.objetivo ?? 'general') // objetivo seleccionado en el selector
+const generando     = ref(false) // true mientras se procesa la petición de generar plan
 
+// Los 5 objetivos disponibles para generar el plan
 const objetivos = [
-    { id: 'ansiedad',   label: 'Gestionar la ansiedad',   emoji: '😰', color: '#d0eaf8' },
-    { id: 'tristeza',   label: 'Superar la tristeza',      emoji: '😢', color: '#d4edda' },
-    { id: 'estres',     label: 'Reducir el estrés',        emoji: '😤', color: '#ffd5d5' },
-    { id: 'sueno',      label: 'Dormir mejor',             emoji: '😴', color: '#e8eaf6' },
-    { id: 'general',    label: 'Bienestar general',        emoji: '✨', color: '#fff9c4' },
+    { id: 'ansiedad', label: 'Gestionar la ansiedad', emoji: '😰', color: '#d0eaf8' },
+    { id: 'tristeza', label: 'Superar la tristeza',   emoji: '😢', color: '#d4edda' },
+    { id: 'estres',   label: 'Reducir el estrés',     emoji: '😤', color: '#ffd5d5' },
+    { id: 'sueno',    label: 'Dormir mejor',          emoji: '😴', color: '#e8eaf6' },
+    { id: 'general',  label: 'Bienestar general',     emoji: '✨', color: '#fff9c4' },
 ]
 
 const diasSemana = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
 
+// Obtiene el día de la semana actual en español con la primera letra en mayúscula
 const hoy = new Date().toLocaleDateString('es-ES', { weekday: 'long' })
     .replace(/^\w/, c => c.toUpperCase())
 
+// Comprueba si un día específico ya fue marcado como completado en el plan actual.
+// Convierte las fechas ISO del array dias_check al nombre del día en español para comparar.
 const estaHecho = (dia) => {
     if (!props.planActual) return false
     return props.planActual.dias_check?.some(d => {
@@ -34,8 +44,10 @@ const estaHecho = (dia) => {
     })
 }
 
+// Comprueba si el día pasado es el día de hoy (para resaltar la actividad de hoy)
 const esHoy = (dia) => dia === hoy
 
+// Envía la petición de generar un nuevo plan con el objetivo seleccionado
 const generar = () => {
     generando.value = true
     router.post('/mi-plan/generar', {

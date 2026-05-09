@@ -10,14 +10,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
+// Controlador del perfil personalizado de Heart to Heart (diferente al ProfileController de Breeze).
+// Muestra el perfil completo con: estadísticas de uso, nivel de usuario, logros, emociones recientes
+// y último resultado del test de bienestar. También gestiona actualización de datos y contraseña.
 class UserProfileController extends Controller
 {
+    // Muestra la página de perfil con todos los datos del usuario y sus estadísticas.
     public function index()
     {
         $user   = auth()->user();
         $userId = $user->id;
 
-        // Estadísticas generales
+        // Estadísticas generales de actividad del usuario
         $totalEmociones  = EmotionalRecord::where('user_id', $userId)->count();
         $totalDiario     = class_exists(DiaryEntry::class)
             ? DiaryEntry::where('user_id', $userId)->count()
@@ -108,6 +112,8 @@ class UserProfileController extends Controller
         ]);
     }
 
+    // Actualiza nombre, bio, localización y avatar del usuario.
+    // Si no se envía avatar nuevo, mantiene el que ya tenía.
     public function update(Request $request)
     {
         $request->validate([
@@ -121,23 +127,28 @@ class UserProfileController extends Controller
             'name'     => $request->name,
             'bio'      => $request->bio,
             'location' => $request->location,
+            // Si no se envía avatar, conservar el anterior en lugar de borrarlo
             'avatar'   => $request->avatar ?? auth()->user()->avatar,
         ]);
 
         return back()->with('success', '✅ Perfil actualizado correctamente');
     }
 
+    // Cambia la contraseña del usuario verificando primero la contraseña actual.
+    // Usa Hash::check para comparar la contraseña actual con el hash almacenado.
     public function updatePassword(Request $request)
     {
         $request->validate([
             'current_password' => 'required',
-            'password'         => 'required|min:8|confirmed',
+            'password'         => 'required|min:8|confirmed', // confirmed = debe coincidir con password_confirmation
         ]);
 
+        // Verificar que la contraseña actual introducida coincide con la almacenada
         if (!Hash::check($request->current_password, auth()->user()->password)) {
             return back()->withErrors(['current_password' => 'La contraseña actual no es correcta']);
         }
 
+        // Hash::make genera el hash seguro de la nueva contraseña antes de guardarla
         auth()->user()->update([
             'password' => Hash::make($request->password),
         ]);
@@ -145,10 +156,13 @@ class UserProfileController extends Controller
         return back()->with('success', '🔐 Contraseña actualizada correctamente');
     }
 
+    // Elimina la cuenta del usuario de forma permanente tras verificar su contraseña.
+    // Después de borrar, cierra sesión y redirige a la página principal.
     public function deleteAccount(Request $request)
     {
         $request->validate(['password' => 'required']);
 
+        // Verificar la contraseña como medida de seguridad antes de eliminar la cuenta
         if (!Hash::check($request->password, auth()->user()->password)) {
             return back()->withErrors(['password' => 'Contraseña incorrecta']);
         }

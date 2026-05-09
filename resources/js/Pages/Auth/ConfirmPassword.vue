@@ -1,4 +1,9 @@
 <script setup>
+// Página de confirmación de contraseña para acceder a zonas sensibles.
+// Laravel la muestra cuando el middleware 'password.confirm' detecta que
+// han pasado más de 3 horas desde la última confirmación del usuario.
+// Usa los componentes de Breeze (InputLabel, TextInput, etc.) sin rediseño.
+
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
@@ -7,12 +12,15 @@ import TextInput from '@/Components/TextInput.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 
 const form = useForm({
-    password: '',
+    password: '', // solo se pide la contraseña actual, no el email (ya se conoce)
 });
 
+// Envía POST a password.confirm (ConfirmablePasswordController@store).
+// Si la contraseña es correcta, Laravel actualiza la marca de tiempo de confirmación
+// y redirige a la URL protegida que el usuario intentaba acceder.
 const submit = () => {
     form.post(route('password.confirm'), {
-        onFinish: () => form.reset(),
+        onFinish: () => form.reset(), // limpia el campo contraseña al terminar
     });
 };
 </script>

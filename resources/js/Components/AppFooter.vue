@@ -1,4 +1,7 @@
 <script setup>
+// Pie de página global que aparece en todas las páginas autenticadas (incluido en AppLayout).
+// Contiene: branding, aviso de que no sustituye atención profesional, links de navegación
+// y los números de emergencia (024 y 112) que la app siempre muestra de forma visible.
 import { Link } from '@inertiajs/vue3'
 </script>
 

@@ -1,4 +1,8 @@
-FRASES_MOTIVACIONALES = [
+# respuestas.py - Respuestas del chatbot Hearty
+# Este archivo contiene todas las respuestas predefinidas del chatbot,
+# organizadas por categorías para diferentes emociones y situaciones.
+
+FRASES_MOTIVACIONALES = [ # Frases motivacionales para incluir en respuestas
     "El progreso, no la perfección, es lo que importa. 🌱",
     "Cuidarte no es egoísta, es necesario. 💚",
     "Un día a la vez. Solo el siguiente paso. 👣",
@@ -13,7 +17,7 @@ FRASES_MOTIVACIONALES = [
     "No tienes que tenerlo todo resuelto hoy. 💛",
 ]
 
-CONSEJOS_GENERALES = [
+CONSEJOS_GENERALES = [ # Consejos generales de bienestar para respuestas
     "Dedica 5 minutos al día a respirar conscientemente. Marca la diferencia.",
     "Escribe tres cosas positivas antes de dormir. Entrena tu cerebro hacia el bienestar.",
     "El ejercicio moderado es uno de los mejores antidepresivos naturales.",
@@ -26,25 +30,25 @@ CONSEJOS_GENERALES = [
     "El autocuidado no es un lujo, es una necesidad básica.",
 ]
 
-RESPUESTAS_ANSIEDAD = [
+RESPUESTAS_ANSIEDAD = [ # Respuestas específicas para cuando se detecta ansiedad
     "Entiendo que la ansiedad puede sentirse abrumadora 💙 Es una respuesta de tu cuerpo que intenta protegerte, aunque en este momento no lo parezca.\n\nLo primero: respira conmigo. Inhala 4 segundos, mantén 7, exhala 8. Tres ciclos y notarás la diferencia.\n\n¿Puedes contarme qué está generando esa ansiedad ahora mismo?",
     "La ansiedad tiene una voz muy convincente, pero no siempre dice la verdad 💚\n\nEn este momento lo más importante es anclar tu mente al presente. Nombra 5 cosas que puedes ver ahora mismo a tu alrededor. Eso activa el sistema nervioso parasimpático y frena la respuesta de estrés.\n\n¿Cómo de intensa dirías que es tu ansiedad ahora, del 1 al 10?",
     "Que reconozcas lo que sientes ya es el primer paso, y es un paso importante 🌟\n\nLa ansiedad vive en el futuro, en los «¿y si...?» que nos imaginamos. Traer la mente al presente es la mejor herramienta.\n\n¿Hay algo concreto que te preocupa, o es más una sensación general de que algo va a ir mal?",
 ]
 
-RESPUESTAS_TRISTEZA = [
+RESPUESTAS_TRISTEZA = [ # Respuestas específicas para cuando se detecta tristeza
     "Gracias por contarme cómo te sientes. La tristeza merece ser escuchada, no ignorada ni apresurada 💙\n\nNo tienes que «ponerte bien» rápido. A veces el cuerpo y la mente necesitan tiempo para procesar.\n\n¿Quieres contarme qué ha pasado? Estoy aquí sin juzgarte.",
     "Lo que sientes es completamente válido 🤍 La tristeza no es debilidad, es una emoción humana que nos dice que algo importa.\n\nCuando estamos tristes el cuerpo necesita movimiento suave, no fuerza. Un paseo corto o un poco de yoga puede liberar neurotransmisores que alivian.\n\n¿Hace cuánto tiempo te sientes así?",
     "Me alegra que estés aquí y que lo hayas compartido 💚 Muchas veces cargar con la tristeza en silencio la hace más pesada.\n\nQuiero preguntarte algo importante: ¿la tristeza tiene una razón concreta o aparece sin saber muy bien por qué?",
 ]
 
-RESPUESTAS_ESTRES = [
+RESPUESTAS_ESTRES = [ # Respuestas específicas para cuando se detecta estrés
     "El estrés es una señal de que tu cuerpo está trabajando al límite 💙 No es malo sentirlo, pero sí necesita atención.\n\nLo primero es liberar un poco de esa tensión física. Aprieta los puños con fuerza durante 10 segundos y suelta. Repite tres veces. Eso activa el sistema parasimpático.\n\n¿Qué está generando más estrés ahora mismo?",
     "Cuando todo se acumula es difícil saber por dónde empezar 🌱 Pero no tienes que resolver todo hoy.\n\nPropongo algo: escribe tres cosas que PUEDES controlar ahora mismo. Eso ayuda al cerebro a salir del modo pánico.\n\n¿Te parece bien intentarlo?",
     "El estrés crónico agota enormemente 💚 Tu cuerpo lleva tiempo funcionando en modo emergencia y eso tiene un coste.\n\nLa técnica de respiración de caja (4-4-4-4) es la que usan los Navy SEALs en momentos de alta presión. ¿Quieres que te la guíe ahora mismo?",
 ]
 
-RESPUESTAS_CANSANCIO = [
+RESPUESTAS_CANSANCIO = [ # Respuestas específicas para cuando se detecta cansancio
     "El cansancio profundo no siempre se soluciona durmiendo más 💙 A veces es el alma la que está cansada, no solo el cuerpo.\n\n¿Puedes decirme más? ¿Es cansancio físico, mental, emocional... o una mezcla de todo?",
     "Hay días en que el cuerpo dice «hasta aquí» y eso hay que escucharlo 🤍\n\nLo más importante ahora es no exigirte más de lo que puedes dar. ¿Cuándo fue la última vez que descansaste de verdad, sin pendientes en la cabeza?",
     "El agotamiento emocional es real y es serio 💚 No es flojera ni excusa.\n\nCuando estamos muy cansados nuestro cerebro no puede gestionar bien las emociones. Todo parece más difícil de lo que es. ¿Qué es lo que más te está drenando energía últimamente?",

@@ -5,19 +5,26 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 
+// Servicio que gestiona las llamadas a la API de noticias (NewsAPI.org).
+// Busca artículos en español sobre salud mental según la categoría elegida.
+// Utiliza caché de 1 hora para no gastar peticiones de la API en cada carga de página.
+// Si la API falla o no está configurada, devuelve artículos de ejemplo predefinidos.
 class NewsService
 {
-    private $apiKey;
-    private $baseUrl;
+    private $apiKey;  // clave de NewsAPI leída desde config/services.php
+    private $baseUrl; // URL base de la API (ej: https://newsapi.org/v2/everything)
 
     public function __construct()
     {
-        $this->apiKey = config('services.newsapi.key');
+        $this->apiKey  = config('services.newsapi.key');
         $this->baseUrl = config('services.newsapi.url');
     }
 
+    // Obtiene artículos filtrados por categoría y texto de búsqueda con paginación.
+    // Cada categoría tiene una query predefinida en español para la API.
     public function getArticles(string $categoria = 'general', string $busqueda = '', int $pagina = 1): array
     {
+        // Mapa de categorías a queries de búsqueda optimizadas para NewsAPI
         $queries = [
             'salud_mental' => 'salud mental OR bienestar emocional OR psicologia',
             'ansiedad'     => 'ansiedad OR ataques de panico OR estres',
@@ -28,18 +35,21 @@ class NewsService
             'general'      => 'salud mental OR bienestar psicologico',
         ];
 
+        // Si hay texto de búsqueda libre, usarlo directamente; si no, usar la query de la categoría
         $query = $busqueda ?: ($queries[$categoria] ?? $queries['general']);
 
+        // La clave de caché incluye categoría, búsqueda y página para que cada combinación sea única
         $cacheKey = "news_{$categoria}_{$busqueda}_{$pagina}";
 
-        // Cachear 1 hora para no gastar peticiones
+        // Cache::remember devuelve el valor cacheado si existe; si no, ejecuta el callback y lo guarda
+        // 3600 segundos = 1 hora de caché para no gastar peticiones de la API
         return Cache::remember($cacheKey, 3600, function () use ($query, $pagina) {
             try {
                 $response = Http::timeout(10)->get($this->baseUrl, [
                     'q'        => $query,
-                    'language' => 'es',
-                    'sortBy'   => 'publishedAt',
-                    'pageSize' => 12,
+                    'language' => 'es',        // solo artículos en español
+                    'sortBy'   => 'publishedAt', // los más recientes primero
+                    'pageSize' => 12,            // 12 artículos por página
                     'page'     => $pagina,
                     'apiKey'   => $this->apiKey,
                 ]);
@@ -55,17 +65,22 @@ class NewsService
                     ];
                 }
 
+                // Si la API respondió con error (4xx, 5xx), usar artículos de fallback
                 return $this->articulosFallback();
 
             } catch (\Exception $e) {
+                // Si hay timeout o error de red, usar artículos de fallback para no romper la UI
                 return $this->articulosFallback();
             }
         });
     }
 
+    // Limpia y normaliza los artículos de la API eliminando los que no tienen título válido
+    // y mapeando los campos de la API al formato interno de la aplicación
     private function limpiarArticulos(array $articles): array
     {
         return collect($articles)
+            // Filtrar artículos eliminados (NewsAPI los marca con título '[Removed]')
             ->filter(fn($a) => !empty($a['title']) && $a['title'] !== '[Removed]')
             ->map(fn($a) => [
                 'title'        => $a['title'],
@@ -74,13 +89,15 @@ class NewsService
                 'image_url'    => $a['urlToImage'] ?? null,
                 'source_name'  => $a['source']['name'] ?? 'Fuente desconocida',
                 'published_at' => $a['publishedAt'] ? date('d/m/Y', strtotime($a['publishedAt'])) : '',
+                // Hash MD5 de la URL para usarlo como clave única en el frontend
                 'url_hash'     => md5($a['url']),
             ])
             ->values()
             ->toArray();
     }
 
-    // Artículos de ejemplo si la API falla
+    // Devuelve 3 artículos de ejemplo cuando la API no está disponible o falla.
+    // Esto evita que la página de noticias aparezca vacía ante el usuario.
     private function articulosFallback(): array
     {
         return [

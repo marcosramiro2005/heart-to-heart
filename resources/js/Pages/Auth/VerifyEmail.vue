@@ -1,20 +1,29 @@
 <script setup>
+// Página de verificación de correo electrónico.
+// Se muestra al usuario registrado que aún no ha verificado su email.
+// Permite reenviar el correo de verificación pulsando el botón.
+// El middleware 'verified' redirige a esta página si el email no está verificado.
+
 import { computed } from 'vue'
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
 
 const props = defineProps({
-    status: { type: String },
+    status: { type: String }, // 'verification-link-sent' cuando el correo acaba de reenviarse
 })
 
-const page = usePage()
+// Se lee el email del usuario desde las props globales de Inertia (auth.user.email)
+const page      = usePage()
 const userEmail = computed(() => page.props.auth?.user?.email ?? '')
 
+// useForm sin campos: solo necesita el CSRF token y el endpoint para reenviar el correo
 const form = useForm({})
 
+// Envía POST a verification.send (EmailVerificationNotificationController@store)
 const submit = () => {
     form.post(route('verification.send'))
 }
 
+// true cuando Laravel ha confirmado que el correo fue reenviado en esta petición
 const verificationLinkSent = computed(() => props.status === 'verification-link-sent')
 </script>
 

@@ -1,3 +1,8 @@
+# app.py - Servidor Flask para el chatbot Hearty
+# Este archivo implementa el backend del chatbot emocional "Hearty".
+# Utiliza Flask para crear una API REST que procesa mensajes de usuarios,
+# detecta emociones y sugiere técnicas de bienestar.
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import random
@@ -5,10 +10,21 @@ from collections import Counter
 
 from hearty.respuestas import FRASES_MOTIVACIONALES, CONSEJOS_GENERALES
 
+# Crear la aplicación Flask
 app = Flask(__name__)
-CORS(app, origins=["http://127.0.0.1:8000", "http://localhost:8000", "http://192.168.1.40:8000"])
+
+# Configurar CORS para permitir peticiones desde el frontend
+CORS(app, origins=[
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+    "http://192.168.1.40:8000",
+    "https://heart-to-heart-marcos.fly.dev",
+])
 
 # ── Emociones, términos clave y técnicas recomendadas ─────────────────────────
+# Diccionario que define las emociones reconocidas por el chatbot.
+# Cada emoción tiene términos clave para detectar en los mensajes del usuario
+# y técnicas recomendadas para ayudar con esa emoción.
 EMOCIONES = {
     "crisis": {
         "terminos": [
@@ -134,6 +150,12 @@ EMOCIONES = {
         "tecnicas": [],
     },
 }
+# ── Flujo guiado de preguntas ─────────────────────────────────────────────────
+# Cuando el usuario abre el chat por primera vez se le guía por estas 4 preguntas.
+# Cada objeto tiene: id (nombre del paso), mensaje (texto de Hearty), opciones (botones),
+# y siguiente (id del siguiente paso, o "final" para terminar el flujo).
+# Al llegar a "final", generar_resumen_final() construye un mensaje personalizado
+# con las técnicas adecuadas según las respuestas acumuladas en flow_answers.
 FLUJO_PREGUNTAS = [
     {
         "id": "bienvenida",
@@ -161,6 +183,9 @@ FLUJO_PREGUNTAS = [
     },
 ]
 
+# Mapeo de opciones del menú inicial a emociones internas.
+# Cuando el usuario pulsa un botón del flujo guiado, inferir_emocion_por_opcion()
+# busca en este diccionario para saber qué emoción tratar.
 RESPUESTA_EMOCION_MAP = {
     "😊 bien": "alegria",
     "😌 tranquilo": "alegria",
@@ -173,10 +198,14 @@ RESPUESTA_EMOCION_MAP = {
 }
 
 
+# Devuelve el objeto de pregunta del flujo cuyo "id" coincida, o None si no existe
 def get_pregunta_por_id(pregunta_id):
     return next((p for p in FLUJO_PREGUNTAS if p["id"] == pregunta_id), None)
 
 
+# Intenta mapear una opción del menú guiado a una emoción.
+# Primero busca en RESPUESTA_EMOCION_MAP, luego comprueba substrings frecuentes,
+# y como fallback llama a detectar_emocion() (detección por palabras clave).
 def inferir_emocion_por_opcion(texto):
     if not texto:
         return None
@@ -201,6 +230,9 @@ def inferir_emocion_por_opcion(texto):
     return detectar_emocion(texto)
 
 
+# Construye el mensaje final del flujo guiado combinando las respuestas acumuladas.
+# Recibe flow_answers (dict paso→respuesta) y el nombre del usuario.
+# Devuelve (texto, emocion, tecnicas) para que el endpoint /chat los incluya en la respuesta.
 def generar_resumen_final(flow_answers, nombre):
     n = _n(nombre)
     emocion = inferir_emocion_por_opcion(flow_answers.get("bienvenida", ""))
@@ -255,6 +287,11 @@ def generar_resumen_final(flow_answers, nombre):
     return texto, emocion, tecnicas
 
 
+# Avanza el flujo guiado un paso.
+# - pregunta_actual: id del paso que el usuario acaba de responder
+# - respuesta: lo que ha seleccionado/escrito el usuario
+# - flow_answers: dict acumulado de todas las respuestas previas del flujo
+# Devuelve el dict con la siguiente pregunta, o el resumen final si siguiente=="final".
 def procesar_flujo_preguntas(pregunta_actual, respuesta, flow_answers, nombre):
     if not pregunta_actual:
         return None
@@ -649,6 +686,10 @@ PALABRAS_ESCUCHA = [
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
+
+# Determina si el mensaje del usuario es una respuesta vaga/corta ("sí", "no", "igual"…).
+# Se usa para decidir si tiene sentido preguntar por seguimiento de la emoción anterior.
+# Mensajes con contenido real siempre generan respuesta genérica contextual, nunca seguimiento.
 def es_continuacion(mensaje):
     """True cuando el mensaje es una respuesta corta/vaga sin contenido propio.
     Solo en ese caso tiene sentido usar el 'seguimiento' de la emoción anterior."""
@@ -665,11 +706,16 @@ def es_continuacion(mensaje):
     return t in respuestas_vagas
 
 
+# Formatea el nombre para insertarlo en frases: ", Marco" o "" si no hay nombre.
 def _n(nombre):
     n = nombre.split()[0] if nombre else ""
     return f", {n}" if n else ""
 
 
+# Analiza el texto libre del usuario y devuelve la emoción predominante.
+# Primero comprueba términos de CRISIS (tienen prioridad absoluta).
+# Luego cuenta coincidencias para cada emoción y devuelve la que más puntos tenga.
+# Devuelve None si no detecta ninguna emoción reconocida.
 def detectar_emocion(texto):
     t = texto.lower()
     for term in EMOCIONES["crisis"]["terminos"]:
@@ -704,6 +750,8 @@ def detectar_pide_escucha(texto):
     return any(p in t for p in PALABRAS_ESCUCHA)
 
 
+# Analiza todos los mensajes del usuario en el historial y devuelve la emoción
+# que ha aparecido más veces (excluyendo "crisis" para no usar como "seguimiento").
 def historial_emocion_predominante(historial):
     emociones = [
         detectar_emocion(m.get("texto", ""))
@@ -714,10 +762,14 @@ def historial_emocion_predominante(historial):
     return Counter(emociones).most_common(1)[0][0] if emociones else None
 
 
+# Cuenta cuántos mensajes del historial son del usuario (sender=="user").
+# Se usa para detectar si es el primer mensaje y elegir la respuesta de inicio.
 def num_mensajes_usuario(historial):
     return sum(1 for m in historial if m.get("sender") == "user")
 
 
+# Construye el dict de respuesta estándar para todos los endpoints.
+# Añade una frase motivacional aleatoria cuando hay emoción negativa detectada.
 def _fmt(respuesta, emocion, tecnicas):
     return {
         "respuesta": respuesta,
@@ -733,6 +785,17 @@ def _fmt(respuesta, emocion, tecnicas):
 
 
 # ── Motor de conversación ─────────────────────────────────────────────────────
+# Decide qué respuesta generar según el contexto del mensaje.
+# Orden de prioridad:
+#   1. Crisis (respuesta urgente con teléfono 024)
+#   2. Pide escucha (usuario dice "no me entiendes"…)
+#   3. Situación concreta detectada (ruptura, insomnio, examen…)
+#   4. Primer mensaje → respuesta de bienvenida o primer acercamiento a la emoción
+#   5. Mejora detectada (antes triste, ahora alegre)
+#   6. Pide consejo → respuesta con técnicas concretas
+#   7. Emoción detectada → profundizar si ya la nombraron antes, o primera vez
+#   8. Sin emoción + mensaje vago → seguimiento de la emoción predominante anterior
+#   9. Sin nada → respuesta genérica
 def construir_respuesta(mensaje, emocion, nombre, historial, sesiones):
     n = _n(nombre)
     num_msgs = num_mensajes_usuario(historial)
@@ -831,11 +894,16 @@ def construir_respuesta(mensaje, emocion, nombre, historial, sesiones):
 
 
 # ── Rutas Flask ───────────────────────────────────────────────────────────────
+# GET /health → comprobación de que el servidor está activo (usada por el frontend)
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok", "chatbot": "Hearty 💚"})
 
 
+# GET /inicio?nombre=X&sesiones=N → saludo de bienvenida personalizado.
+# Adapta el mensaje según si es la primera sesión, una de las primeras 5,
+# una sesión habitual o un usuario con más de 20 sesiones.
+# Devuelve el mensaje y las opciones de emoción para mostrar como botones.
 @app.route("/inicio", methods=["GET"])
 def inicio():
     nombre = request.args.get("nombre", "")
@@ -866,6 +934,11 @@ def inicio():
     })
 
 
+# POST /chat → endpoint principal del chatbot.
+# Recibe JSON con: mensaje, nombre, historial_chat, sesiones,
+#   pregunta_actual (id del paso del flujo guiado, o null) y flow_answers.
+# Si hay pregunta_actual activa, delega en procesar_flujo_preguntas().
+# Si no, detecta la emoción y llama a construir_respuesta().
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json()
@@ -894,6 +967,8 @@ def chat():
     return jsonify(resultado)
 
 
+# POST /analizar → detecta la emoción en un texto arbitrario sin responder al usuario.
+# Usado por HeartyController para registrar la emoción detectada en la sesión de Hearty.
 @app.route("/analizar", methods=["POST"])
 def analizar():
     data = request.get_json()
@@ -901,6 +976,8 @@ def analizar():
     return jsonify({"detectado": emocion is not None, "emocion": emocion})
 
 
+# GET /consejo → devuelve un consejo y una frase motivacional aleatorios.
+# Puede usarse como fallback o como contenido extra en la interfaz.
 @app.route("/consejo", methods=["GET"])
 def consejo():
     return jsonify({

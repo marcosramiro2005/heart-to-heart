@@ -1,4 +1,7 @@
 <script setup>
+// Página "Sobre nosotros" / Acerca de Heart to Heart.
+// Página puramente informativa sin lógica dinámica: misión, tecnología,
+// aviso legal y contacto. No recibe props del servidor.
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Link } from '@inertiajs/vue3'
 </script>

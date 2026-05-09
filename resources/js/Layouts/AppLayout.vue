@@ -1,24 +1,35 @@
 <script setup>
+// Layout principal que envuelve todas las páginas autenticadas de la app.
+// Proporciona: barra de navegación, menú móvil, flash messages y pie de página.
+// Todas las páginas de /Pages que usen <AppLayout> heredan esta estructura.
+
 import { Link, router, usePage } from '@inertiajs/vue3'
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import AchievementToast from '@/Components/AchievementToast.vue'
 import AppFooter from '@/Components/AppFooter.vue'
 
+// Controla si el mensaje flash de éxito está visible
 const flashVisible = ref(false)
 
+// Observa el prop flash.success compartido desde HandleInertiaRequests.
+// Cuando cambia (se produce una redirección con ->with('success',...)), muestra
+// el mensaje 3 segundos y lo oculta automáticamente.
 watch(() => usePage().props.flash?.success, (val) => {
     if (val) {
         flashVisible.value = true
         setTimeout(() => { flashVisible.value = false }, 3000)
     }
-}, { immediate: true })
+}, { immediate: true }) // immediate: true para evaluar el valor inicial al montar el componente
 
-const page              = usePage()
-const dropdownAbierto   = ref(false)
-const menuMovilAbierto  = ref(false)
-const tecnicasAbierto   = ref(false)
-const scrolled          = ref(false)
+const page = usePage() // acceso reactivo a los props compartidos de Inertia (auth, flash, etc.)
 
+// Estados de apertura/cierre de los menús desplegables
+const dropdownAbierto   = ref(false) // dropdown del avatar de usuario
+const menuMovilAbierto  = ref(false) // menú hamburguesa en móvil
+const tecnicasAbierto   = ref(false) // mega-menú desplegable de técnicas
+const scrolled          = ref(false) // true cuando se hace scroll, para aplicar sombra al navbar
+
+// Links principales de la barra de navegación superior
 const navLinks = [
     { name: 'Inicio',        href: '/home' },
     { name: 'Mis emociones', href: '/mis-emociones' },
@@ -27,53 +38,61 @@ const navLinks = [
     { name: 'Biblioteca',    href: '/biblioteca' },
 ]
 
+// Lista de técnicas de bienestar para el mega-menú desplegable "🌿 Técnicas"
 const tecnicas = [
-    { nombre: 'Respiración',       emoji: '🫁', href: '/respiracion' },
-    { nombre: 'Meditación',        emoji: '🧘', href: '/meditacion' },
-    { nombre: 'Sonidos',           emoji: '🎵', href: '/sonidos' },
-    { nombre: 'Diario gratitud',   emoji: '📓', href: '/diario' },
-    { nombre: 'EFT Tapping',       emoji: '👆', href: '/tapping' },
-    { nombre: 'Visualización',     emoji: '🌈', href: '/visualizacion' },
-    { nombre: 'Yoga suave',        emoji: '🤸', href: '/yoga' },
-    { nombre: 'Journaling',        emoji: '📝', href: '/journaling' },
-    { nombre: 'Infusiones',        emoji: '🍵', href: '/infusiones' },
-    { nombre: 'Ejercicio',         emoji: '🏃', href: '/ejercicio' },
-    { nombre: '5-4-3-2-1',        emoji: '🌍', href: '/tecnica-5-4-3-2-1' },
-    { nombre: 'Autocompasión',     emoji: '💗', href: '/autocompasion' },
-    { nombre: 'Musicoterapia',     emoji: '🎶', href: '/musicoterapia' },
+    { nombre: 'Respiración',         emoji: '🫁', href: '/respiracion' },
+    { nombre: 'Meditación',          emoji: '🧘', href: '/meditacion' },
+    { nombre: 'Sonidos',             emoji: '🎵', href: '/sonidos' },
+    { nombre: 'Diario gratitud',     emoji: '📓', href: '/diario' },
+    { nombre: 'EFT Tapping',         emoji: '👆', href: '/tapping' },
+    { nombre: 'Visualización',       emoji: '🌈', href: '/visualizacion' },
+    { nombre: 'Yoga suave',          emoji: '🤸', href: '/yoga' },
+    { nombre: 'Journaling',          emoji: '📝', href: '/journaling' },
+    { nombre: 'Infusiones',          emoji: '🍵', href: '/infusiones' },
+    { nombre: 'Ejercicio',           emoji: '🏃', href: '/ejercicio' },
+    { nombre: '5-4-3-2-1',          emoji: '🌍', href: '/tecnica-5-4-3-2-1' },
+    { nombre: 'Autocompasión',       emoji: '💗', href: '/autocompasion' },
+    { nombre: 'Musicoterapia',       emoji: '🎶', href: '/musicoterapia' },
     { nombre: 'Relajación muscular', emoji: '💆', href: '/relajacion-muscular' },
-    { nombre: 'Gratitud visual',   emoji: '✨', href: '/gratitud-visual' },
+    { nombre: 'Gratitud visual',     emoji: '✨', href: '/gratitud-visual' },
 ]
 
+// Cierra todos los menús y hace logout mediante POST (Inertia gestiona el token CSRF automáticamente)
 const cerrarSesion = () => {
     cerrarTodo()
     router.post('/logout')
 }
 
+// Cierra todos los menús y navega a la ruta indicada usando Inertia (SPA, sin recarga completa)
 const navegarA = (href) => {
     cerrarTodo()
     router.visit(href)
 }
 
+// Cierra todos los menús desplegables a la vez (usada antes de navegar o al hacer click fuera)
 const cerrarTodo = () => {
     dropdownAbierto.value  = false
     tecnicasAbierto.value  = false
     menuMovilAbierto.value = false
 }
 
+// Cierra todos los menús cuando el usuario hace click fuera de la barra de navegación
 const clickFuera = (e) => {
     if (!document.getElementById('navbar-inner')?.contains(e.target)) {
         cerrarTodo()
     }
 }
 
+// Detecta si el usuario ha hecho scroll más de 10px para aplicar sombra al navbar
 const onScroll = () => { scrolled.value = window.scrollY > 10 }
 
+// Registrar los listeners globales al montar el componente
 onMounted(() => {
     document.addEventListener('click', clickFuera)
     window.addEventListener('scroll', onScroll)
 })
 
+// Limpiar los listeners al desmontar para evitar memory leaks
 onUnmounted(() => {
     document.removeEventListener('click', clickFuera)
     window.removeEventListener('scroll', onScroll)

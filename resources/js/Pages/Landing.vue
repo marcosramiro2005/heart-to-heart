@@ -1,16 +1,26 @@
 <script setup>
+// Página de landing (página pública de inicio para usuarios no autenticados).
+// Es la primera impresión de Heart to Heart: hero, demo del chatbot, funciones,
+// cómo funciona, estadísticas animadas y llamada a la acción final.
+// No usa AppLayout (tiene su propia barra de navegación).
+
 import { Link } from '@inertiajs/vue3'
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 
+// Detecta el scroll para aplicar clases CSS al header (efecto sticky/sombra)
 const scrollY = ref(0)
 const onScroll = () => { scrollY.value = window.scrollY }
-const mobileMenuOpen = ref(false)
+
+// Estado del menú móvil hamburguesa
+const mobileMenuOpen  = ref(false)
 const toggleMobileMenu = () => { mobileMenuOpen.value = !mobileMenuOpen.value }
-const closeMobileMenu = () => { mobileMenuOpen.value = false }
+const closeMobileMenu  = () => { mobileMenuOpen.value = false }
 
 onMounted(() => window.addEventListener('scroll', onScroll))
-onUnmounted(() => window.removeEventListener('scroll', onScroll))
+onUnmounted(() => window.removeEventListener('scroll', onScroll)) // evita memory leak
 
+// Mensajes de demo del chat que se van mostrando secuencialmente
+// para que el visitante vea cómo funciona Hearty antes de registrarse
 const chatDemo = ref([
     { sender: 'hearty', texto: '¡Hola! Soy Hearty 💚 ¿Cómo te sientes hoy?', visible: false },
     { sender: 'user',   texto: 'Estoy muy ansioso por los exámenes...', visible: false },
@@ -19,22 +29,27 @@ const chatDemo = ref([
     { sender: 'hearty', texto: 'Primero calmemos esa ansiedad para que puedas concentrarte. Prueba la respiración 4-7-8 ahora mismo 🫁', visible: false },
 ])
 
+// Intervalo que hace aparecer los mensajes uno a uno cada 1.9s y los reinicia en bucle
 let chatInterval = null
 onMounted(() => {
     let i = 0
     chatInterval = setInterval(() => {
         if (i < chatDemo.value.length) { chatDemo.value[i].visible = true; i++ }
         else {
+            // Reinicia el ciclo: oculta todos y espera 1.2s antes de mostrar el primero
             i = 0
             chatDemo.value.forEach(m => m.visible = false)
             setTimeout(() => { chatDemo.value[0].visible = true; i = 1 }, 1200)
         }
     }, 1900)
 })
-onUnmounted(() => clearInterval(chatInterval))
+onUnmounted(() => clearInterval(chatInterval)) // limpia el intervalo al destruir el componente
 
+// IntersectionObserver para animaciones de entrada "reveal":
+// cuando un elemento con clase .reveal entra en la pantalla (threshold 10%),
+// se le añade la clase 'visible' que activa la transición CSS de aparición.
 onMounted(async () => {
-    await nextTick()
+    await nextTick() // espera a que el DOM esté renderizado antes de observar
     const obs = new IntersectionObserver(
         entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') }),
         { threshold: 0.1 }
@@ -42,6 +57,8 @@ onMounted(async () => {
     document.querySelectorAll('.reveal').forEach(el => obs.observe(el))
 })
 
+// Contadores animados de la sección de estadísticas.
+// Se animan una sola vez cuando el usuario llega a esa sección (statsAnimated flag).
 const statsAnimated = ref(false)
 const counters = ref([
     { target: 15,  current: 0, suffix: '+',  label: 'Técnicas de bienestar' },

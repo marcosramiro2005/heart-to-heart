@@ -28,7 +28,12 @@ class HeartyController extends Controller
      * URL base del servidor Flask (chatbot de Python).
      * Debe estar ejecutándose localmente para que funcione el chat.
      */
-    private $chatbotUrl = 'http://127.0.0.1:5000';
+    private $chatbotUrl;
+
+    public function __construct()
+    {
+        $this->chatbotUrl = env('HEARTY_URL', 'http://127.0.0.1:5000');
+    }
 
     /**
      * Muestra la página principal del chatbot.

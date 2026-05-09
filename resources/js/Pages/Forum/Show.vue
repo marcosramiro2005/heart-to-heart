@@ -1,38 +1,49 @@
 <script setup>
+// Página de detalle de un post del foro comunitario.
+// Muestra el post completo, sus comentarios y permite interactuar
+// (dar like y comentar). El like usa axios directamente (sin Inertia)
+// para actualizar el contador sin recargar la página entera.
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { useForm, Link } from '@inertiajs/vue3'
 import axios from 'axios'
 import { ref } from 'vue'
 
-const props = defineProps({ post: Object })
+const props = defineProps({ post: Object }) // post completo con comments, likes_count, liked_by_me
 
-const likesCount = ref(props.post.likes_count)
-const likedByMe = ref(props.post.liked_by_me)
-const cargandoLike = ref(false)
+// Estado local del like: se inicializa con los valores del servidor y se actualiza
+// de forma optimista con la respuesta de la petición axios (sin recarga de página)
+const likesCount    = ref(props.post.likes_count)
+const likedByMe     = ref(props.post.liked_by_me)
+const cargandoLike  = ref(false) // evita doble-click mientras la petición está en vuelo
 
 const commentForm = useForm({
-    content: '',
-    is_anonymous: false,
+    content:      '',
+    is_anonymous: false, // si true, el backend guarda el comentario sin nombre de autor
 })
 
+// Envía POST al endpoint de like; el backend crea o elimina el registro (toggle)
+// y devuelve el nuevo conteo. Usa try/finally para liberar el flag siempre.
 const toggleLike = async () => {
     if (cargandoLike.value) return
     cargandoLike.value = true
     try {
         const res = await axios.post(`/comunidad/${props.post.id}/like`)
         likesCount.value = res.data.likes_count
-        likedByMe.value = res.data.liked
+        likedByMe.value  = res.data.liked
     } finally {
         cargandoLike.value = false
     }
 }
 
+// Envía el comentario con Inertia (recarga parcial del post al terminar)
 const submitComment = () => {
     commentForm.post(`/comunidad/${props.post.id}/comentar`, {
         onSuccess: () => commentForm.reset(),
     })
 }
 
+// Mapa de ID de categoría a etiqueta legible para mostrar en el post
 const categoriaLabel = {
     ansiedad: '😰 Ansiedad',
     depresion: '😢 Depresión',

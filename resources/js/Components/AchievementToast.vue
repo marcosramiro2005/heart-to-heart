@@ -1,17 +1,23 @@
 <script setup>
+// Componente que muestra una notificación flotante cuando el usuario desbloquea un logro.
+// Se monta dentro de AppLayout y está presente en todas las páginas autenticadas.
+// Lee el prop flash.achievement compartido desde HandleInertiaRequests para activarse.
+
 import { ref, onMounted } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 
-const visible   = ref(false)
-const logro     = ref(null)
-const page      = usePage()
+const visible = ref(false) // controla si el toast es visible
+const logro   = ref(null)  // datos del logro a mostrar (nombre, emoji, etc.)
+const page    = usePage()
 
+// Muestra el toast con los datos del logro y lo oculta automáticamente tras 5 segundos
 const mostrar = (achievement) => {
     logro.value   = achievement
     visible.value = true
     setTimeout(() => { visible.value = false }, 5000)
 }
 
+// Al montar el componente, comprueba si hay un logro nuevo en el flash de la sesión
 onMounted(() => {
     if (page.props.flash?.achievement) {
         mostrar(page.props.flash.achievement)

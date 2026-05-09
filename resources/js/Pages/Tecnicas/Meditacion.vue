@@ -1,14 +1,18 @@
 <script setup>
+// Componente de Meditación Guiada
+// Este componente proporciona una sesión de meditación con fases estructuradas
+// Incluye instrucciones paso a paso y temporizador para guiar al usuario
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { ref, onUnmounted } from 'vue'
 
-const duracion   = ref(10)
-const activo     = ref(false)
-const fase       = ref('listo')
-const segundos   = ref(0)
-const faseNombre = ref('Prepárate')
+const duracion   = ref(10) // Duración total de la meditación en minutos
+const activo     = ref(false) // Si la meditación está activa
+const fase       = ref('listo') // Fase actual: 'listo', 'activo', 'completado'
+const segundos   = ref(0) // Segundos restantes en la sesión
+const faseNombre = ref('Prepárate') // Nombre de la fase actual
 
-const FASES_MEDITACION = [
+const FASES_MEDITACION = [ // Fases de la meditación con duración e instrucciones
     { nombre: 'Cierra los ojos',       duracion: 10, instruccion: 'Ponte cómodo/a y cierra suavemente los ojos' },
     { nombre: 'Respira',               duracion: 30, instruccion: 'Lleva la atención a tu respiración natural' },
     { nombre: 'Escanea tu cuerpo',     duracion: 60, instruccion: 'Recorre mentalmente tu cuerpo de pies a cabeza' },
@@ -17,13 +21,13 @@ const FASES_MEDITACION = [
     { nombre: 'Termina',               duracion: 10, instruccion: 'Abre los ojos lentamente cuando estés listo/a' },
 ]
 
-let intervalo  = null
-let faseIdx    = 0
-let tiempoFase = 0
+let intervalo  = null // ID del intervalo para el temporizador
+let faseIdx    = 0   // Índice de la fase actual
+let tiempoFase = 0   // Tiempo transcurrido en la fase actual
 
-const instruccionActual = ref(FASES_MEDITACION[0].instruccion)
+const instruccionActual = ref(FASES_MEDITACION[0].instruccion) // Instrucción actual a mostrar
 
-const iniciar = () => {
+const iniciar = () => { // Inicia la sesión de meditación
     activo.value    = true
     faseIdx         = 0
     tiempoFase      = 0
@@ -48,24 +52,26 @@ const iniciar = () => {
             fase.value   = 'completado'
         }
     }, 1000)
+    }, 1000)
 }
 
-const detener = () => {
+const detener = () => { // Detiene la sesión de meditación
     clearInterval(intervalo)
     activo.value = false
     fase.value   = 'listo'
 }
 
-const tiempoFormato = () => {
+const tiempoFormato = () => { // Formatea los segundos restantes en formato MM:SS
     const m = Math.floor(segundos.value / 60)
     const s = segundos.value % 60
     return `${m}:${s.toString().padStart(2, '0')}`
 }
 
-onUnmounted(() => clearInterval(intervalo))
+onUnmounted(() => clearInterval(intervalo)) // Limpia el intervalo al desmontar el componente
 </script>
 
 <template>
+    <!-- Plantilla del componente de Meditación Guiada -->
     <AppLayout>
         <div class="med-wrapper">
 

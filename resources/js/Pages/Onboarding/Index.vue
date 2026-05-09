@@ -1,44 +1,60 @@
 <script setup>
+// Página de onboarding que aparece la primera vez que el usuario inicia sesión.
+// Es un asistente de 5 pasos que guía al usuario para:
+// - Dar la bienvenida personalizada
+// - Explicar las funcionalidades principales de la app
+// - Elegir un avatar emoji
+// - Elegir su objetivo principal de bienestar
+// - Confirmar y acceder a la app
+// Una vez completado, el campo onboarding_completado queda en true y no vuelve a mostrarse.
+
 import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 
+// Este layout NO usa AppLayout (no tiene navbar) ya que es una pantalla de bienvenida a pantalla completa
 const props = defineProps({
-    userName: String,
+    userName: String, // nombre completo del usuario para personalizar el saludo
 })
 
-const paso        = ref(1)
-const totalPasos  = 5
-const avatar      = ref('👤')
-const objetivo    = ref('')
-const enviando    = ref(false)
+const paso       = ref(1)    // paso actual del asistente (1-5)
+const totalPasos = 5         // número total de pasos del onboarding
+const avatar     = ref('👤') // emoji elegido como avatar (se puede cambiar en el paso 3)
+const objetivo   = ref('')   // objetivo principal elegido en el paso 4
+const enviando   = ref(false)
 
+// Solo el primer nombre para hacer el saludo más cercano (ej: "Hola Marcos" en vez de "Hola Marcos García")
 const nombre = computed(() => props.userName?.split(' ')[0] ?? 'amigo/a')
 
+// Grid de emojis disponibles como avatares para el usuario
 const avatares = [
     '😊', '😌', '🦋', '🌸', '🌟', '💫', '🌈', '🍀',
     '🌻', '🦄', '🐬', '🌙', '☀️', '🌊', '🏔️', '🌺',
     '💚', '💙', '💜', '🧡', '❤️', '🤍', '🖤', '💛',
 ]
 
+// Objetivos disponibles para preseleccionar el tipo de plan semanal del usuario
 const objetivos = [
-    { id: 'ansiedad',   label: 'Gestionar la ansiedad',    emoji: '😰' },
-    { id: 'tristeza',   label: 'Superar la tristeza',       emoji: '😢' },
-    { id: 'estres',     label: 'Reducir el estrés',         emoji: '😤' },
-    { id: 'sueno',      label: 'Dormir mejor',              emoji: '😴' },
-    { id: 'autoestima', label: 'Mejorar mi autoestima',     emoji: '💪' },
-    { id: 'habitos',    label: 'Crear hábitos saludables',  emoji: '🌱' },
-    { id: 'conexion',   label: 'Conectar conmigo mismo/a',  emoji: '💙' },
-    { id: 'general',    label: 'Bienestar general',         emoji: '✨' },
+    { id: 'ansiedad',   label: 'Gestionar la ansiedad',   emoji: '😰' },
+    { id: 'tristeza',   label: 'Superar la tristeza',      emoji: '😢' },
+    { id: 'estres',     label: 'Reducir el estrés',        emoji: '😤' },
+    { id: 'sueno',      label: 'Dormir mejor',             emoji: '😴' },
+    { id: 'autoestima', label: 'Mejorar mi autoestima',    emoji: '💪' },
+    { id: 'habitos',    label: 'Crear hábitos saludables', emoji: '🌱' },
+    { id: 'conexion',   label: 'Conectar conmigo mismo/a', emoji: '💙' },
+    { id: 'general',    label: 'Bienestar general',        emoji: '✨' },
 ]
 
+// Navegar al siguiente paso del asistente
 const siguiente = () => {
     if (paso.value < totalPasos) paso.value++
 }
 
+// Volver al paso anterior del asistente
 const anterior = () => {
     if (paso.value > 1) paso.value--
 }
 
+// Enviar el onboarding al servidor guardando avatar y objetivo elegidos
 const completar = () => {
     enviando.value = true
     router.post('/onboarding', {

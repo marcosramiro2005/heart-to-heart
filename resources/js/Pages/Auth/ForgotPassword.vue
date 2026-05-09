@@ -1,10 +1,16 @@
 <script setup>
+// Página "¿Olvidaste tu contraseña?".
+// El usuario introduce su email y Laravel le envía un enlace de reset firmado.
+// El prop `status` viene del controlador cuando el correo ya fue enviado
+// (Laravel lo pasa como flash para mostrar el mensaje de confirmación).
+
 import { Head, Link, useForm } from '@inertiajs/vue3'
 
-const props = defineProps({ status: String })
+const props = defineProps({ status: String }) // mensaje de éxito tras enviar el correo
 
-const form = useForm({ email: '' })
+const form = useForm({ email: '' }) // solo necesita el email para buscar la cuenta
 
+// Envía POST a password.email (PasswordResetLinkController@store en Laravel)
 const submit = () => form.post(route('password.email'))
 </script>
 

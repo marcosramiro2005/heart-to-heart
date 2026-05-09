@@ -1,4 +1,7 @@
 <script setup>
+// Layout para páginas de invitados (login, registro, reset de contraseña).
+// Muestra un diseño centrado con el logo y una tarjeta blanca que contiene el formulario (<slot />).
+// Las páginas que no requieren autenticación usan este layout en lugar de AppLayout.
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import { Link } from '@inertiajs/vue3';
 </script>

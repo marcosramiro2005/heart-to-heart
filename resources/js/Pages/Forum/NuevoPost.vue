@@ -1,24 +1,31 @@
 <script setup>
+// Componente/página de creación de un nuevo post en el foro.
+// Se usa como modal (emite 'cerrar') incrustado dentro de Forum/Index.vue.
+// El post puede marcarse como anónimo para ocultar el nombre del autor.
+
 import { useForm } from '@inertiajs/vue3'
 
+// Evento para que el padre (Forum/Index) cierre este componente
 const emit = defineEmits(['cerrar'])
 
+// Lista de categorías disponibles; la categoría 'general' es el valor por defecto
 const categorias = [
-    { id: 'ansiedad', label: '😰 Ansiedad' },
+    { id: 'ansiedad',  label: '😰 Ansiedad' },
     { id: 'depresion', label: '😢 Depresión' },
-    { id: 'relaciones', label: '💙 Relaciones' },
-    { id: 'autoestima', label: '💪 Autoestima' },
-    { id: 'sueno', label: '😴 Sueño' },
-    { id: 'general', label: '💬 General' },
+    { id: 'relaciones',label: '💙 Relaciones' },
+    { id: 'autoestima',label: '💪 Autoestima' },
+    { id: 'sueno',     label: '😴 Sueño' },
+    { id: 'general',   label: '💬 General' },
 ]
 
 const form = useForm({
-    title: '',
-    content: '',
-    category: 'general',
-    is_anonymous: false,
+    title:        '',
+    content:      '',
+    category:     'general',  // categoría seleccionada (toggle visual en la template)
+    is_anonymous: false,       // si true, ForumPost guardará 'Anónimo' como autor
 })
 
+// Envía el nuevo post; al completarse con éxito emite 'cerrar' para ocultar el modal
 const submit = () => {
     form.post('/comunidad', {
         onSuccess: () => emit('cerrar'),
