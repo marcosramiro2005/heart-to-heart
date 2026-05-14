@@ -1,52 +1,72 @@
-# Heart to Heart 💚
+# Heart to Heart
 
-Plataforma web de bienestar emocional y salud mental desarrollada como Trabajo de Fin de Grado (TFG) del Grado Superior en Desarrollo de Aplicaciones Web.
+Plataforma web de bienestar emocional y salud mental desarrollada como Trabajo de Fin de Grado (TFG) del Ciclo Superior en Desarrollo de Aplicaciones Web.
 
----
+**Aplicacion en produccion:** https://heart-to-heart-marcos.fly.dev
 
-## Descripción
-
-Heart to Heart es una aplicación web pensada para acompañar a las personas en su camino hacia el bienestar emocional. Ofrece:
-
-- **Hearty** — Asistente de IA empático disponible 24/7
-- **Comunidad** — Foro de apoyo entre usuarios (con moderación de contenido)
-- **Técnicas de bienestar** — Respiración, meditación, yoga, journaling y más
-- **Dashboard emocional** — Seguimiento del estado de ánimo a lo largo del tiempo
-- **Retos y plan de bienestar** — Objetivos personalizados semanales
-- **Modo Focus** — Sesiones de concentración con temporizador Pomodoro
-- **SOS** — Recursos de crisis y línea de emergencias (024)
-- **Diario personal** — Espacio privado de reflexión
-- **Biblioteca de recursos** — Artículos y guías de salud mental
+**Repositorio:** https://github.com/marcosramiro2005/heart-to-heart
 
 ---
 
-## Stack tecnológico
+## Descripcion
 
-| Capa | Tecnología |
+Heart to Heart es una aplicacion web pensada para acompanar a las personas en su camino hacia el bienestar emocional. Proporciona herramientas practicas, seguimiento del estado de animo y un espacio de comunidad, todo integrado en una interfaz cuidada y accesible.
+
+---
+
+## Funcionalidades
+
+| Modulo | Descripcion |
+|--------|-------------|
+| **Hearty** | Asistente de IA empatico disponible 24/7 (chatbot con Python + Flask) |
+| **Foro** | Comunidad de apoyo entre usuarios con posts, comentarios, likes y modo anonimo |
+| **Tecnicas de bienestar** | Respiracion, meditacion, yoga, journaling, visualizacion, tapping, grounding, autocompasion, musicoterapia, relajacion muscular, ejercicio e infusiones |
+| **Dashboard emocional** | Registro y seguimiento del estado de animo con graficas (Chart.js) y calendario |
+| **Diario personal** | Espacio privado de reflexion con entradas diarias |
+| **Retos** | Sistema de retos de bienestar con progreso y rachas |
+| **Plan semanal** | Plan de bienestar personalizado semanal |
+| **Test PHQ-9** | Test de bienestar semanal con seguimiento de resultados |
+| **Logros y badges** | Sistema de logros, niveles y notificaciones toast |
+| **Modo Focus** | Sesiones de concentracion con temporizador Pomodoro |
+| **Biblioteca** | Articulos y recursos de salud mental con opcion de guardar favoritos |
+| **Noticias** | Noticias de salud mental con buscador |
+| **SOS** | Recursos de crisis y acceso directo a la linea 024 |
+| **Perfil** | Avatar, bio, actividad, logros y configuracion de seguridad |
+| **Onboarding** | Flujo de bienvenida personalizado para nuevos usuarios |
+
+---
+
+## Stack tecnologico
+
+| Capa | Tecnologia |
 |------|-----------|
 | Backend | Laravel 13 (PHP 8.3) |
 | Frontend | Vue 3 + Inertia.js |
 | Estilos | CSS personalizado + Tailwind CSS |
 | Build | Vite 8 |
 | Base de datos | SQLite |
-| Autenticación | Laravel Breeze |
-| Despliegue | Docker + Fly.io |
+| Autenticacion | Laravel Breeze |
+| Graficas | Chart.js + vue-chartjs |
+| Chatbot IA | Python + Flask |
+| Email | Resend |
+| Desplegue | Docker + Fly.io |
 
 ---
 
-## Instalación local
+## Instalacion local
 
 ### Requisitos previos
 - PHP 8.3+
 - Composer 2
 - Node.js 20+
 - npm
+- Python 3 + pip (para el chatbot Hearty)
 
 ### Pasos
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/tu-usuario/heart-to-heart.git
+git clone https://github.com/marcosramiro2005/heart-to-heart.git
 cd heart-to-heart
 
 # 2. Instalar dependencias PHP
@@ -59,42 +79,47 @@ npm install
 cp .env.example .env
 php artisan key:generate
 
-# 5. Crear la base de datos y ejecutar migraciones
-touch database/database.sqlite
-php artisan migrate
+# 5. Crear la base de datos y ejecutar migraciones con datos de prueba
+php artisan migrate --seed
 
 # 6. Compilar assets
-npm run dev
+npm run build
 
 # 7. Arrancar el servidor de desarrollo
 php artisan serve
 ```
 
-La app estará disponible en `http://localhost:8000`.
+La app estara disponible en `http://localhost:8000`.
+
+Para arrancar el chatbot Hearty en local:
+
+```bash
+cd chatbot
+pip install -r requirements.txt
+python app.py
+```
 
 ---
 
-## Despliegue en producción (Fly.io)
+## Despliegue en produccion (Fly.io)
 
 ### Requisitos
-- Cuenta en [fly.io](https://fly.io) (requiere tarjeta, pero el tier gratuito no cobra)
+- Cuenta en [fly.io](https://fly.io)
 - [flyctl](https://fly.io/docs/flyctl/install/) instalado
 
 ### Primera vez
 
 ```bash
-# 1. Iniciar sesión
+# 1. Iniciar sesion
 fly auth login
 
-# 2. Crear la app (elige un nombre único)
-fly apps create heart-to-heart-marco
+# 2. Crear la app
+fly apps create nombre-de-tu-app
 
-# 3. Editar fly.toml: reemplaza "heart-to-heart-app" por tu nombre de app
-
-# 4. Crear volumen persistente para la base de datos
+# 3. Crear volumen persistente para la base de datos
 fly volumes create heart_data --region mad --size 1
 
-# 5. Configurar variables secretas
+# 4. Configurar variables secretas
 fly secrets set APP_KEY=$(php artisan key:generate --show)
 fly secrets set APP_NAME="Heart to Heart"
 fly secrets set MAIL_MAILER=resend
@@ -104,10 +129,10 @@ fly secrets set MAIL_USERNAME=resend
 fly secrets set MAIL_PASSWORD=tu_api_key_de_resend
 fly secrets set MAIL_FROM_ADDRESS=noreply@tudominio.com
 
-# 6. Desplegar
+# 5. Desplegar
 fly deploy
 
-# 7. Abrir la app
+# 6. Abrir la app
 fly open
 ```
 
@@ -115,27 +140,20 @@ fly open
 
 ```bash
 git add .
-git commit -m "descripción del cambio"
+git commit -m "descripcion del cambio"
 fly deploy
 ```
-
-### Email en producción
-
-Se recomienda [Resend](https://resend.com) — gratuito hasta 3.000 emails/mes:
-1. Crea cuenta en resend.com
-2. Genera un API Key
-3. Úsalo como `MAIL_PASSWORD` en el comando `fly secrets set`
 
 ---
 
 ## Variables de entorno principales
 
-| Variable | Descripción |
+| Variable | Descripcion |
 |----------|-------------|
 | `APP_KEY` | Clave de cifrado (generada con `php artisan key:generate`) |
-| `APP_URL` | URL pública de la app |
+| `APP_URL` | URL publica de la app |
 | `DB_DATABASE` | Ruta al fichero SQLite |
-| `MAIL_*` | Configuración del servidor de correo |
+| `MAIL_*` | Configuracion del servidor de correo (Resend) |
 
 ---
 
@@ -144,20 +162,34 @@ Se recomienda [Resend](https://resend.com) — gratuito hasta 3.000 emails/mes:
 ```
 heart-to-heart/
 ├── app/
-│   ├── Http/Controllers/     # Controladores (Forum, Hearty, Emotions...)
+│   ├── Http/Controllers/     # Controladores (Forum, Hearty, Emotions, Challenges...)
 │   ├── Models/               # Modelos Eloquent
-│   └── Rules/                # Reglas de validación personalizadas
+│   └── Rules/                # Reglas de validacion personalizadas
+├── chatbot/                  # Chatbot Hearty (Python + Flask)
 ├── database/
 │   └── migrations/           # Migraciones de base de datos
 ├── resources/
 │   └── js/
-│       └── Pages/            # Componentes Vue por sección (~50 páginas)
+│       └── Pages/            # Componentes Vue por seccion
+│           ├── Tecnicas/     # 14 tecnicas de bienestar
+│           ├── Forum/        # Foro de comunidad
+│           ├── Hearty/       # Chatbot IA
+│           ├── EmotionalDashboard/
+│           ├── Diary/
+│           ├── Challenges/
+│           ├── WellnessPlan/
+│           ├── WellnessTest/
+│           ├── Achievements/
+│           ├── Focus/
+│           ├── Resources/
+│           ├── News/
+│           ├── SOS/
+│           ├── Profile/
+│           └── Auth/
 ├── routes/
-│   └── web.php               # Definición de rutas
-├── public/
-│   └── images/               # Imágenes estáticas (logo, etc.)
-├── Dockerfile                # Imagen Docker para producción
-├── fly.toml                  # Configuración de Fly.io
+│   └── web.php               # Definicion de rutas
+├── Dockerfile                # Imagen Docker para produccion
+├── fly.toml                  # Configuracion de Fly.io
 └── .env.example              # Variables de entorno de ejemplo
 ```
 
@@ -165,4 +197,4 @@ heart-to-heart/
 
 ## Autor
 
-Marcos — TFG DAW · 2026
+Marcos — TFG DAW · 2025/2026

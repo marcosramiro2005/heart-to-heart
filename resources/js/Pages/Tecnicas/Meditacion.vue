@@ -52,7 +52,6 @@ const iniciar = () => { // Inicia la sesión de meditación
             fase.value   = 'completado'
         }
     }, 1000)
-    }, 1000)
 }
 
 const detener = () => { // Detiene la sesión de meditación
