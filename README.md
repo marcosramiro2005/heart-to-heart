@@ -1,61 +1,71 @@
-# Heart to Heart
+<div align="center">
 
-Plataforma web de bienestar emocional y salud mental desarrollada como Trabajo de Fin de Grado (TFG) del Ciclo Superior en Desarrollo de Aplicaciones Web.
+# 💚 Heart to Heart
 
-**Aplicacion en produccion:** https://heart-to-heart-marcos.fly.dev
+### Plataforma web de bienestar emocional y salud mental
 
-**Repositorio:** https://github.com/marcosramiro2005/heart-to-heart
+[![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
+[![Vue.js](https://img.shields.io/badge/Vue.js-3-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white)](https://vuejs.org)
+[![Inertia.js](https://img.shields.io/badge/Inertia.js-2-9553E9?style=for-the-badge&logo=inertia&logoColor=white)](https://inertiajs.com)
+[![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://sqlite.org)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
+[![Fly.io](https://img.shields.io/badge/Fly.io-8B5CF6?style=for-the-badge&logo=fly.io&logoColor=white)](https://fly.io)
+
+**Trabajo de Fin de Grado — Ciclo Superior en Desarrollo de Aplicaciones Web · 2025/2026**
+
+🌐 **[heart-to-heart-marcos.fly.dev](https://heart-to-heart-marcos.fly.dev)**
+
+</div>
 
 ---
 
-## Descripcion
+## 📖 Sobre el proyecto
 
-Heart to Heart es una aplicacion web pensada para acompanar a las personas en su camino hacia el bienestar emocional. Proporciona herramientas practicas, seguimiento del estado de animo y un espacio de comunidad, todo integrado en una interfaz cuidada y accesible.
+Heart to Heart es una aplicación web pensada para acompañar a las personas en su camino hacia el bienestar emocional. Ofrece herramientas prácticas, seguimiento del estado de ánimo y un espacio de comunidad, todo integrado en una interfaz cuidada y accesible.
 
 ---
 
-## Funcionalidades
+## ✨ Funcionalidades
 
-| Modulo | Descripcion |
+| Módulo | Descripción |
 |--------|-------------|
-| **Hearty** | Asistente de IA empatico disponible 24/7 (chatbot con Python + Flask) |
-| **Foro** | Comunidad de apoyo entre usuarios con posts, comentarios, likes y modo anonimo |
-| **Tecnicas de bienestar** | Respiracion, meditacion, yoga, journaling, visualizacion, tapping, grounding, autocompasion, musicoterapia, relajacion muscular, ejercicio e infusiones |
-| **Dashboard emocional** | Registro y seguimiento del estado de animo con graficas (Chart.js) y calendario |
-| **Diario personal** | Espacio privado de reflexion con entradas diarias |
-| **Retos** | Sistema de retos de bienestar con progreso y rachas |
-| **Plan semanal** | Plan de bienestar personalizado semanal |
-| **Test PHQ-9** | Test de bienestar semanal con seguimiento de resultados |
-| **Logros y badges** | Sistema de logros, niveles y notificaciones toast |
-| **Modo Focus** | Sesiones de concentracion con temporizador Pomodoro |
-| **Biblioteca** | Articulos y recursos de salud mental con opcion de guardar favoritos |
-| **Noticias** | Noticias de salud mental con buscador |
-| **SOS** | Recursos de crisis y acceso directo a la linea 024 |
-| **Perfil** | Avatar, bio, actividad, logros y configuracion de seguridad |
-| **Onboarding** | Flujo de bienvenida personalizado para nuevos usuarios |
+| 🤖 **Hearty** | Asistente de IA empático disponible 24/7 (Python + Flask) |
+| 💬 **Foro** | Comunidad de apoyo con posts, comentarios, likes y modo anónimo |
+| 🧘 **Técnicas de bienestar** | 14 técnicas: respiración, meditación, yoga, journaling, tapping, grounding, visualización, autocompasión, musicoterapia, relajación muscular, ejercicio e infusiones |
+| 📊 **Dashboard emocional** | Registro y seguimiento del estado de ánimo con gráficas y calendario |
+| 📓 **Diario personal** | Espacio privado de reflexión con entradas diarias |
+| 🏆 **Retos y logros** | Sistema de retos, badges, niveles y notificaciones |
+| 📅 **Plan semanal** | Plan de bienestar personalizado |
+| 🧪 **Test PHQ-9** | Test de bienestar semanal con seguimiento de resultados |
+| ⏱️ **Modo Focus** | Sesiones de concentración con temporizador Pomodoro |
+| 📚 **Biblioteca** | Recursos de salud mental con opción de guardar favoritos |
+| 📰 **Noticias** | Noticias de salud mental con buscador |
+| 🆘 **SOS** | Recursos de crisis y acceso directo a la línea 024 |
+| 👤 **Perfil** | Avatar, bio, actividad, logros y seguridad |
+| 🎉 **Onboarding** | Flujo de bienvenida personalizado para nuevos usuarios |
 
 ---
 
-## Stack tecnologico
+## 🛠️ Stack tecnológico
 
-| Capa | Tecnologia |
+| Capa | Tecnología |
 |------|-----------|
 | Backend | Laravel 13 (PHP 8.3) |
 | Frontend | Vue 3 + Inertia.js |
 | Estilos | CSS personalizado + Tailwind CSS |
 | Build | Vite 8 |
 | Base de datos | SQLite |
-| Autenticacion | Laravel Breeze |
-| Graficas | Chart.js + vue-chartjs |
+| Autenticación | Laravel Breeze |
+| Gráficas | Chart.js + vue-chartjs |
 | Chatbot IA | Python + Flask |
 | Email | Resend |
-| Desplegue | Docker + Fly.io |
+| Despliegue | Docker + Fly.io |
 
 ---
 
-## Instalacion local
+## 🚀 Instalación local
 
-### Requisitos previos
+### Requisitos
 - PHP 8.3+
 - Composer 2
 - Node.js 20+
@@ -69,29 +79,25 @@ Heart to Heart es una aplicacion web pensada para acompanar a las personas en su
 git clone https://github.com/marcosramiro2005/heart-to-heart.git
 cd heart-to-heart
 
-# 2. Instalar dependencias PHP
+# 2. Instalar dependencias
 composer install
-
-# 3. Instalar dependencias Node
 npm install
 
-# 4. Configurar el entorno
+# 3. Configurar el entorno
 cp .env.example .env
 php artisan key:generate
 
-# 5. Crear la base de datos y ejecutar migraciones con datos de prueba
+# 4. Base de datos
 php artisan migrate --seed
 
-# 6. Compilar assets
+# 5. Compilar assets y arrancar
 npm run build
-
-# 7. Arrancar el servidor de desarrollo
 php artisan serve
 ```
 
-La app estara disponible en `http://localhost:8000`.
+> La app estará disponible en `http://localhost:8000`
 
-Para arrancar el chatbot Hearty en local:
+Para el chatbot Hearty:
 
 ```bash
 cd chatbot
@@ -101,100 +107,54 @@ python app.py
 
 ---
 
-## Despliegue en produccion (Fly.io)
+## ⚙️ Variables de entorno
 
-### Requisitos
-- Cuenta en [fly.io](https://fly.io)
-- [flyctl](https://fly.io/docs/flyctl/install/) instalado
-
-### Primera vez
-
-```bash
-# 1. Iniciar sesion
-fly auth login
-
-# 2. Crear la app
-fly apps create nombre-de-tu-app
-
-# 3. Crear volumen persistente para la base de datos
-fly volumes create heart_data --region mad --size 1
-
-# 4. Configurar variables secretas
-fly secrets set APP_KEY=$(php artisan key:generate --show)
-fly secrets set APP_NAME="Heart to Heart"
-fly secrets set MAIL_MAILER=resend
-fly secrets set MAIL_HOST=smtp.resend.com
-fly secrets set MAIL_PORT=465
-fly secrets set MAIL_USERNAME=resend
-fly secrets set MAIL_PASSWORD=tu_api_key_de_resend
-fly secrets set MAIL_FROM_ADDRESS=noreply@tudominio.com
-
-# 5. Desplegar
-fly deploy
-
-# 6. Abrir la app
-fly open
-```
-
-### Redesplegar tras cambios
-
-```bash
-git add .
-git commit -m "descripcion del cambio"
-fly deploy
-```
-
----
-
-## Variables de entorno principales
-
-| Variable | Descripcion |
+| Variable | Descripción |
 |----------|-------------|
-| `APP_KEY` | Clave de cifrado (generada con `php artisan key:generate`) |
-| `APP_URL` | URL publica de la app |
+| `APP_KEY` | Clave de cifrado (`php artisan key:generate`) |
+| `APP_URL` | URL de la app |
 | `DB_DATABASE` | Ruta al fichero SQLite |
-| `MAIL_*` | Configuracion del servidor de correo (Resend) |
+| `MAIL_*` | Configuración del servidor de correo (Resend) |
 
 ---
 
-## Estructura del proyecto
+## 📁 Estructura del proyecto
 
 ```
 heart-to-heart/
 ├── app/
-│   ├── Http/Controllers/     # Controladores (Forum, Hearty, Emotions, Challenges...)
+│   ├── Http/Controllers/     # Controladores
 │   ├── Models/               # Modelos Eloquent
-│   └── Rules/                # Reglas de validacion personalizadas
+│   └── Rules/                # Reglas de validación
 ├── chatbot/                  # Chatbot Hearty (Python + Flask)
 ├── database/
-│   └── migrations/           # Migraciones de base de datos
+│   └── migrations/
 ├── resources/
-│   └── js/
-│       └── Pages/            # Componentes Vue por seccion
-│           ├── Tecnicas/     # 14 tecnicas de bienestar
-│           ├── Forum/        # Foro de comunidad
-│           ├── Hearty/       # Chatbot IA
-│           ├── EmotionalDashboard/
-│           ├── Diary/
-│           ├── Challenges/
-│           ├── WellnessPlan/
-│           ├── WellnessTest/
-│           ├── Achievements/
-│           ├── Focus/
-│           ├── Resources/
-│           ├── News/
-│           ├── SOS/
-│           ├── Profile/
-│           └── Auth/
-├── routes/
-│   └── web.php               # Definicion de rutas
-├── Dockerfile                # Imagen Docker para produccion
-├── fly.toml                  # Configuracion de Fly.io
-└── .env.example              # Variables de entorno de ejemplo
+│   └── js/Pages/
+│       ├── Tecnicas/         # 14 técnicas de bienestar
+│       ├── Forum/
+│       ├── Hearty/
+│       ├── EmotionalDashboard/
+│       ├── Diary/
+│       ├── Challenges/
+│       ├── WellnessPlan/
+│       ├── WellnessTest/
+│       ├── Achievements/
+│       ├── Focus/
+│       ├── Resources/
+│       ├── News/
+│       ├── SOS/
+│       ├── Profile/
+│       └── Auth/
+├── Dockerfile
+├── fly.toml
+└── .env.example
 ```
 
 ---
 
-## Autor
+<div align="center">
 
-Marcos — TFG DAW · 2025/2026
+Desarrollado por **Marcos** · TFG DAW 2025/2026
+
+</div>
