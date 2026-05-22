@@ -30,6 +30,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'theme_color',
         'onboarding_completado',
         'objetivo_principal',
+        'email_verification_code',
+        'email_verification_code_expires_at',
     ];
 
     // Campos ocultos en las respuestas JSON
@@ -42,12 +44,13 @@ class User extends Authenticatable implements MustVerifyEmail
     protected function casts(): array
     {
         return [
-            'email_verified_at'     => 'datetime',
-            'password'              => 'hashed',
-            'birth_date'            => 'date',
-            'profile_public'        => 'boolean',
-            'show_in_forum'         => 'boolean',
-            'onboarding_completado' => 'boolean',
+            'email_verified_at'                  => 'datetime',
+            'email_verification_code_expires_at' => 'datetime',
+            'password'                           => 'hashed',
+            'birth_date'                         => 'date',
+            'profile_public'                     => 'boolean',
+            'show_in_forum'                      => 'boolean',
+            'onboarding_completado'              => 'boolean',
         ];
     }
 

@@ -31,7 +31,7 @@ Heart to Heart es una aplicación web pensada para acompañar a las personas en 
 |--------|-------------|
 | 🤖 **Hearty** | Asistente de IA empático disponible 24/7 (Python + Flask) |
 | 💬 **Foro** | Comunidad de apoyo con posts, comentarios, likes y modo anónimo |
-| 🧘 **Técnicas de bienestar** | 14 técnicas: respiración, meditación, yoga, journaling, tapping, grounding, visualización, autocompasión, musicoterapia, relajación muscular, ejercicio e infusiones |
+| 🧘 **Técnicas de bienestar** | 14 técnicas: respiración, meditación, yoga, journaling, tapping, grounding, visualización, autocompasión,musicoterapia, relajación muscular, ejercicio e infusiones |
 | 📊 **Dashboard emocional** | Registro y seguimiento del estado de ánimo con gráficas y calendario |
 | 📓 **Diario personal** | Espacio privado de reflexión con entradas diarias |
 | 🏆 **Retos y logros** | Sistema de retos, badges, niveles y notificaciones |

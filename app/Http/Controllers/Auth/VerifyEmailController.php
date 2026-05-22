@@ -4,24 +4,43 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Auth\Events\Verified;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class VerifyEmailController extends Controller
 {
-    /**
-     * Mark the authenticated user's email address as verified.
-     */
-    public function __invoke(EmailVerificationRequest $request): RedirectResponse
+    public function __invoke(Request $request): RedirectResponse
     {
-        if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended(route('onboarding', absolute: false).'?verified=1');
+        $user = $request->user();
+
+        if ($user->hasVerifiedEmail()) {
+            return redirect()->intended(route('home', absolute: false));
         }
 
-        if ($request->user()->markEmailAsVerified()) {
-            event(new Verified($request->user()));
+        $request->validate(['code' => 'required|string|size:6']);
+
+        $code = $request->input('code');
+
+        if ($user->email_verification_code !== $code) {
+            throw ValidationException::withMessages([
+                'code' => 'El código introducido no es válido.',
+            ]);
         }
 
-        return redirect()->intended(route('onboarding', absolute: false).'?verified=1');
+        if (now()->isAfter($user->email_verification_code_expires_at)) {
+            throw ValidationException::withMessages([
+                'code' => 'El código ha expirado. Solicita uno nuevo.',
+            ]);
+        }
+
+        $user->markEmailAsVerified();
+        $user->email_verification_code            = null;
+        $user->email_verification_code_expires_at = null;
+        $user->save();
+
+        event(new Verified($user));
+
+        return redirect()->intended(route('home', absolute: false));
     }
 }

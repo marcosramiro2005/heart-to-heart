@@ -1,30 +1,60 @@
 <script setup>
-// Página de verificación de correo electrónico.
-// Se muestra al usuario registrado que aún no ha verificado su email.
-// Permite reenviar el correo de verificación pulsando el botón.
-// El middleware 'verified' redirige a esta página si el email no está verificado.
-
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
 
 const props = defineProps({
-    status: { type: String }, // 'verification-link-sent' cuando el correo acaba de reenviarse
+    status: { type: String },
 })
 
-// Se lee el email del usuario desde las props globales de Inertia (auth.user.email)
 const page      = usePage()
 const userEmail = computed(() => page.props.auth?.user?.email ?? '')
 
-// useForm sin campos: solo necesita el CSRF token y el endpoint para reenviar el correo
-const form = useForm({})
+// 6 refs individuales para cada dígito
+const digits    = ref(['', '', '', '', '', ''])
+const inputs    = ref([])
 
-// Envía POST a verification.send (EmailVerificationNotificationController@store)
-const submit = () => {
-    form.post(route('verification.send'))
+const form = useForm({ code: '' })
+
+const resendForm = useForm({})
+
+const verificationLinkSent = computed(() => props.status === 'verification-link-sent')
+
+// Al escribir en un campo, avanza al siguiente automáticamente
+function onInput(index, event) {
+    const val = event.target.value.replace(/\D/g, '')
+    digits.value[index] = val.slice(-1)
+    if (val && index < 5) {
+        inputs.value[index + 1]?.focus()
+    }
 }
 
-// true cuando Laravel ha confirmado que el correo fue reenviado en esta petición
-const verificationLinkSent = computed(() => props.status === 'verification-link-sent')
+// Retrocede al campo anterior al pulsar Backspace si el campo está vacío
+function onKeydown(index, event) {
+    if (event.key === 'Backspace' && !digits.value[index] && index > 0) {
+        inputs.value[index - 1]?.focus()
+    }
+}
+
+// Al pegar un código completo, rellenar todos los campos
+function onPaste(event) {
+    const pasted = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+    if (pasted.length === 6) {
+        event.preventDefault()
+        for (let i = 0; i < 6; i++) {
+            digits.value[i] = pasted[i] ?? ''
+        }
+        inputs.value[5]?.focus()
+    }
+}
+
+function submit() {
+    form.code = digits.value.join('')
+    form.post(route('verification.verify'))
+}
+
+function resend() {
+    resendForm.post(route('verification.send'))
+}
 </script>
 
 <template>
@@ -54,7 +84,7 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
                         <span class="dp-num">02</span>
                         <div>
                             <strong>Verifica tu email</strong>
-                            <p>Revisa tu bandeja de entrada</p>
+                            <p>Introduce el código que te hemos enviado</p>
                         </div>
                     </div>
                     <div class="dp-item">
@@ -81,7 +111,7 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
 
                 <div class="ac-header">
                     <h1>Revisa tu correo</h1>
-                    <p>Te hemos enviado un enlace de verificación</p>
+                    <p>Te hemos enviado un código de 6 dígitos</p>
                 </div>
 
                 <div class="email-badge" v-if="userEmail">
@@ -89,27 +119,60 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
                     <span class="badge-text">{{ userEmail }}</span>
                 </div>
 
-                <p class="info-text">
-                    Haz clic en el enlace que te hemos enviado a ese correo para activar tu cuenta. Si no lo encuentras, revisa la carpeta de spam.
-                </p>
-
+                <!-- Mensaje de éxito reenvío -->
                 <div class="auth-success" v-if="verificationLinkSent">
                     <span>✅</span>
-                    <span>¡Enlace reenviado! Revisa tu bandeja de entrada.</span>
+                    <span>¡Nuevo código enviado! Revisa tu bandeja de entrada.</span>
                 </div>
 
+                <!-- Error del código -->
+                <div class="auth-error" v-if="form.errors.code">
+                    <span>❌</span>
+                    <span>{{ form.errors.code }}</span>
+                </div>
+
+                <!-- Inputs de código -->
                 <form @submit.prevent="submit">
+                    <div class="code-inputs">
+                        <input
+                            v-for="(digit, i) in digits"
+                            :key="i"
+                            :ref="el => inputs[i] = el"
+                            type="text"
+                            inputmode="numeric"
+                            maxlength="1"
+                            class="code-digit"
+                            :class="{ filled: digit, error: form.errors.code }"
+                            :value="digit"
+                            @input="onInput(i, $event)"
+                            @keydown="onKeydown(i, $event)"
+                            @paste="onPaste"
+                            autocomplete="off"
+                        />
+                    </div>
+
                     <button
                         type="submit"
                         class="btn-auth"
-                        :disabled="form.processing"
+                        :disabled="form.processing || digits.join('').length < 6"
                     >
-                        <span v-if="form.processing">⏳ Enviando...</span>
-                        <span v-else>🔄 Reenviar correo de verificación</span>
+                        <span v-if="form.processing">⏳ Verificando...</span>
+                        <span v-else>✅ Verificar cuenta</span>
                     </button>
                 </form>
 
                 <div class="ac-footer">
+                    <p class="resend-text">
+                        ¿No has recibido el código?
+                        <button
+                            class="link-resend"
+                            :disabled="resendForm.processing"
+                            @click="resend"
+                            type="button"
+                        >
+                            {{ resendForm.processing ? 'Enviando...' : 'Reenviar código' }}
+                        </button>
+                    </p>
                     <Link
                         :href="route('logout')"
                         method="post"
@@ -256,14 +319,6 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
 .badge-icon { font-size: 1.1rem; flex-shrink: 0; }
 .badge-text { flex: 1; }
 
-.info-text {
-    font-size: 0.88rem;
-    color: #666;
-    line-height: 1.6;
-    margin: 0;
-    text-align: center;
-}
-
 .auth-success {
     display: flex;
     align-items: center;
@@ -275,6 +330,57 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
     font-size: 0.88rem;
     color: #3BAFA7;
     font-weight: 600;
+}
+
+.auth-error {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #fff0f0;
+    border: 1.5px solid #f87171;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 0.88rem;
+    color: #dc2626;
+    font-weight: 600;
+}
+
+/* Inputs de código */
+.code-inputs {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+    margin: 0.5rem 0;
+}
+
+.code-digit {
+    width: 50px;
+    height: 60px;
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #1a1a1a;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    background: white;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: 'Courier New', monospace;
+}
+
+.code-digit:focus {
+    border-color: #4ECDC4;
+    box-shadow: 0 0 0 3px rgba(78,205,196,0.2);
+}
+
+.code-digit.filled {
+    border-color: #3BAFA7;
+    background: #f0fffe;
+}
+
+.code-digit.error {
+    border-color: #f87171;
+    background: #fff0f0;
 }
 
 .btn-auth {
@@ -289,16 +395,44 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
     cursor: pointer;
     transition: background 0.2s, transform 0.2s;
     font-family: inherit;
+    margin-top: 0.25rem;
 }
 
 .btn-auth:hover:not(:disabled) { background: #3BAFA7; transform: translateY(-1px); }
-.btn-auth:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-auth:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.ac-footer { text-align: center; }
+.ac-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.resend-text {
+    font-size: 0.85rem;
+    color: #888;
+    margin: 0;
+}
+
+.link-resend {
+    background: none;
+    border: none;
+    color: #4ECDC4;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.85rem;
+    text-decoration: underline;
+    padding: 0;
+    transition: color 0.2s;
+}
+
+.link-resend:hover:not(:disabled) { color: #2d9990; }
+.link-resend:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .link-logout {
-    font-size: 0.85rem;
-    color: #aaa;
+    font-size: 0.82rem;
+    color: #bbb;
     background: none;
     border: none;
     cursor: pointer;
@@ -307,10 +441,11 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
     transition: color 0.2s;
 }
 
-.link-logout:hover { color: #666; }
+.link-logout:hover { color: #888; }
 
 @media (max-width: 768px) {
     .auth-deco      { display: none; }
     .auth-form-side { width: 100%; background: linear-gradient(135deg, #f0fffe, #ffeef0); }
+    .code-digit     { width: 42px; height: 52px; font-size: 1.4rem; }
 }
 </style>
