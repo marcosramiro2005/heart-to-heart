@@ -26,7 +26,6 @@ const page = usePage() // acceso reactivo a los props compartidos de Inertia (au
 // Estados de apertura/cierre de los menús desplegables
 const dropdownAbierto   = ref(false) // dropdown del avatar de usuario
 const menuMovilAbierto  = ref(false) // menú hamburguesa en móvil
-const tecnicasAbierto   = ref(false) // mega-menú desplegable de técnicas
 const scrolled          = ref(false) // true cuando se hace scroll, para aplicar sombra al navbar
 
 // Links principales de la barra de navegación superior
@@ -36,25 +35,6 @@ const navLinks = [
     { name: 'Comunidad',     href: '/comunidad' },
     { name: 'Retos',         href: '/retos' },
     { name: 'Biblioteca',    href: '/biblioteca' },
-]
-
-// Lista de técnicas de bienestar para el mega-menú desplegable "🌿 Técnicas"
-const tecnicas = [
-    { nombre: 'Respiración',         emoji: '🫁', href: '/respiracion' },
-    { nombre: 'Meditación',          emoji: '🧘', href: '/meditacion' },
-    { nombre: 'Sonidos',             emoji: '🎵', href: '/sonidos' },
-    { nombre: 'Diario gratitud',     emoji: '📓', href: '/diario' },
-    { nombre: 'EFT Tapping',         emoji: '👆', href: '/tapping' },
-    { nombre: 'Visualización',       emoji: '🌈', href: '/visualizacion' },
-    { nombre: 'Yoga suave',          emoji: '🤸', href: '/yoga' },
-    { nombre: 'Journaling',          emoji: '📝', href: '/journaling' },
-    { nombre: 'Infusiones',          emoji: '🍵', href: '/infusiones' },
-    { nombre: 'Ejercicio',           emoji: '🏃', href: '/ejercicio' },
-    { nombre: '5-4-3-2-1',          emoji: '🌍', href: '/tecnica-5-4-3-2-1' },
-    { nombre: 'Autocompasión',       emoji: '💗', href: '/autocompasion' },
-    { nombre: 'Musicoterapia',       emoji: '🎶', href: '/musicoterapia' },
-    { nombre: 'Relajación muscular', emoji: '💆', href: '/relajacion-muscular' },
-    { nombre: 'Gratitud visual',     emoji: '✨', href: '/gratitud-visual' },
 ]
 
 // Cierra todos los menús y hace logout mediante POST (Inertia gestiona el token CSRF automáticamente)
@@ -72,7 +52,6 @@ const navegarA = (href) => {
 // Cierra todos los menús desplegables a la vez (usada antes de navegar o al hacer click fuera)
 const cerrarTodo = () => {
     dropdownAbierto.value  = false
-    tecnicasAbierto.value  = false
     menuMovilAbierto.value = false
 }
 
@@ -125,34 +104,6 @@ onUnmounted(() => {
                         </Link>
                     </li>
 
-                    <!-- Técnicas dropdown -->
-                    <li class="tecnicas-li">
-                        <button
-                            class="nav-tecnicas-btn"
-                            :class="{ activa: tecnicasAbierto }"
-                            @click.stop="tecnicasAbierto = !tecnicasAbierto; dropdownAbierto = false"
-                        >
-                            🌿 Técnicas
-                            <span class="nav-chevron" :class="{ rotado: tecnicasAbierto }">▾</span>
-                        </button>
-
-                        <Transition name="dropdown">
-                            <div v-if="tecnicasAbierto" class="tecnicas-mega">
-                                <div class="tecnicas-mega-grid">
-                                    <Link
-                                        v-for="tec in tecnicas"
-                                        :key="tec.nombre"
-                                        :href="tec.href"
-                                        class="tec-mega-item"
-                                        @click="cerrarTodo"
-                                    >
-                                        <span class="tmi-emoji">{{ tec.emoji }}</span>
-                                        <span class="tmi-nombre">{{ tec.nombre }}</span>
-                                    </Link>
-                                </div>
-                            </div>
-                        </Transition>
-                    </li>
                 </ul>
 
                 <!-- Controles derecha -->
@@ -194,7 +145,7 @@ onUnmounted(() => {
                     </div>
 
                     <!-- Hamburguesa móvil -->
-                    <button class="hamburger" @click.stop="menuMovilAbierto = !menuMovilAbierto; dropdownAbierto = false; tecnicasAbierto = false">
+                    <button class="hamburger" @click.stop="menuMovilAbierto = !menuMovilAbierto; dropdownAbierto = false">
                         <span :class="{ open: menuMovilAbierto }"></span>
                         <span :class="{ open: menuMovilAbierto }"></span>
                         <span :class="{ open: menuMovilAbierto }"></span>
@@ -209,13 +160,6 @@ onUnmounted(() => {
                         :href="link.href" @click="cerrarTodo">
                         {{ link.name }}
                     </Link>
-                    <div class="mm-seccion">🌿 Técnicas</div>
-                    <div class="mm-tecnicas">
-                        <Link v-for="tec in tecnicas" :key="tec.nombre"
-                            :href="tec.href" @click="cerrarTodo" class="mm-tec">
-                            {{ tec.emoji }} {{ tec.nombre }}
-                        </Link>
-                    </div>
                     <div class="mm-divider"></div>
                     <Link href="/perfil" @click="cerrarTodo">👤 Mi perfil</Link>
                     <Link href="/sos" @click="cerrarTodo">🆘 Modo SOS</Link>
@@ -348,75 +292,6 @@ onUnmounted(() => {
     color: #3ab8b0;
     box-shadow: inset 0 0 0 1px rgba(78,205,196,0.18);
 }
-
-/* ── Técnicas dropdown ── */
-.tecnicas-li { position: relative; }
-
-.nav-tecnicas-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #555;
-    padding: 0.45rem 0.75rem;
-    border-radius: 8px;
-    border: none;
-    background: none;
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s;
-    white-space: nowrap;
-    font-family: inherit;
-}
-
-.nav-tecnicas-btn:hover,
-.nav-tecnicas-btn.activa { background: #E8FAF9; color: #4ECDC4; }
-
-.nav-chevron {
-    font-size: 0.7rem;
-    transition: transform 0.2s;
-    display: inline-block;
-}
-
-.nav-chevron.rotado { transform: rotate(180deg); }
-
-/* ── Mega menu técnicas ── */
-.tecnicas-mega {
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%);
-    width: 480px;
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.12);
-    border: 1px solid #f0f0f0;
-    padding: 1rem;
-    z-index: 600;
-}
-
-.tecnicas-mega-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.25rem;
-}
-
-.tec-mega-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.55rem 0.6rem;
-    border-radius: 8px;
-    text-decoration: none;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: #2D2D2D;
-    transition: background 0.15s, color 0.15s;
-}
-
-.tec-mega-item:hover { background: #E8FAF9; color: #4ECDC4; }
-.tmi-emoji  { font-size: 1rem; flex-shrink: 0; }
-.tmi-nombre { font-size: 0.8rem; }
 
 /* ── Controles derecha ── */
 .nav-derecha {
@@ -574,29 +449,6 @@ onUnmounted(() => {
 
 .mobile-menu a:hover { color: #4ECDC4; }
 
-.mm-seccion {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: #aaa;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 0.5rem 0 0.25rem;
-    margin-top: 0.25rem;
-}
-
-.mm-tecnicas {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.25rem;
-}
-
-.mm-tec {
-    font-size: 0.82rem !important;
-    padding: 0.3rem 0.5rem !important;
-    background: #fafafa;
-    border-radius: 8px;
-}
-
 .mm-divider { height: 1px; background: #f0f0f0; margin: 0.25rem 0; }
 
 .mm-logout {
@@ -641,21 +493,6 @@ onUnmounted(() => {
 .hamburger span:nth-child(1).open { transform: rotate(45deg) translate(5px, 5px); }
 .hamburger span:nth-child(2).open { opacity: 0; transform: scaleX(0); }
 .hamburger span:nth-child(3).open { transform: rotate(-45deg) translate(5px, -5px); }
-
-/* ── Mega-menu: no desbordar en pantallas pequeñas ── */
-@media (max-width: 600px) {
-    .tecnicas-mega {
-        position: fixed;
-        top: 60px;
-        left: 0.75rem;
-        right: 0.75rem;
-        width: auto;
-        transform: none;
-        max-height: 60vh;
-        overflow-y: auto;
-    }
-    .tecnicas-mega-grid { grid-template-columns: repeat(2, 1fr); }
-}
 
 /* ── Avatar dropdown: no salir de pantalla en móvil ── */
 @media (max-width: 420px) {
